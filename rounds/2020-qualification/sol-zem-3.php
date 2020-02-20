@@ -17,8 +17,14 @@ function calculateLibraryScore(Library $library)
 function removeBookFromLibraries(Book $book)
 {
   global $libraries;
-  foreach ($libraries as $index => $library) {
+  for ($i = 0; $i < count($libraries); $i++) {
+    $library = $libraries[$i];
     unset($library->booksInLibrary[$book->id]);
+    if (count($library->booksInLibrary) == 0) {
+      $libraries[$i] = $libraries[0];
+      array_shift($libraries);
+      continue;
+    }
   }
 }
 
@@ -31,7 +37,7 @@ function getBestLibrary()
     if ($library->alreadyDone)
       continue;
     $library->localScore = calculateLibraryScore($library);
-    if ($library->localScore == 0) {
+    if ($library->localScore == 0 || count($library->booksInLibrary) == 0) {
       $libraries[$i] = $libraries[0];
       array_shift($libraries);
       continue;
