@@ -19,4 +19,4 @@ $fileContent = $fileManager->get();
 $fileRows = explode("\n", $fileContent);
 //list(..) = explode(' ', $fileRows[0]);
 
-Log::out("Finito di leggere input", 0);
+Log::out("Finito di leggere input", 0, "white", "red");
