@@ -2,6 +2,7 @@ vendor
 benchmarks
 .idea
 .DS_Store
+.vscode
 
 rounds/**/output
 rounds/**/images
