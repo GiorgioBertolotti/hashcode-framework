@@ -69,6 +69,15 @@ class Library
     return $tot;
   }
 
+  public function totOccurrencies()
+  {
+    $occurrencies = 0;
+    foreach ($this->booksInLibrary as $index => $book) {
+      $occurrencies += $book->occurrencies;
+    }
+    return $occurrencies;
+  }
+
   public function avgBookScore()
   {
     $tot = 0;
