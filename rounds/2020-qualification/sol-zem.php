@@ -1,8 +1,9 @@
 <?php
 
 use Utils\Stopwatch;
+use Utils\Log;
 
-$fileName = 'a';
+$fileName = 'b';
 
 require_once 'reader.php';
 
@@ -51,7 +52,23 @@ for ($i = 0; $i < count($libraries); $i++) {
   $library->start();
 }
 
-print_r($libraries);
+Log::out("SCORE: " . $SCORE, 0);
+
+$output = [];
+$countLibs = 0;
+for ($i = 0; $i < count($libraries); $i++) {
+  $library = $libraries[$i];
+  $countBooksShipped = count($library->booksShipped);
+  if ($countBooksShipped > 0) {
+    $output[] = $library->id . " " . count($library->booksShipped);
+    $output[] = implode(" ", $library->booksShipped);
+    $countLibs++;
+  }
+}
+array_unshift($output, $countLibs);
+$fileManager->output(implode("\n", $output));
+
+//print_r($libraries);
 
 Stopwatch::tok('Totale');
 Stopwatch::print('Totale');
