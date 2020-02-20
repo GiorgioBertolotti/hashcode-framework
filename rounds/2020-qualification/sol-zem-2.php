@@ -3,7 +3,7 @@
 use Utils\Stopwatch;
 use Utils\Log;
 
-$fileName = 'b';
+$fileName = 'c';
 
 require_once 'reader.php';
 
@@ -11,7 +11,7 @@ require_once 'reader.php';
 
 function calculateLibraryScore(Library $library)
 {
-  return ($library->maxBooksShippedDaily * count($library->booksInLibrary)) / $library->signupTime;
+  return ($library->maxBooksShippedDaily) / ($library->signupTime * count($library->booksInLibrary));
 }
 
 function removeBookFromLibraries(Book $book)
