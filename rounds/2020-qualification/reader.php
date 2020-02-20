@@ -60,6 +60,15 @@ class Library
     $this->alreadyDone = true;
   }
 
+  public function totScore()
+  {
+    $tot = 0;
+    foreach ($this->booksInLibrary as $index => $book) {
+      $tot += $book->score;
+    }
+    return $tot;
+  }
+
   public function avgBookScore()
   {
     $tot = 0;
