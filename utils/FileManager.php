@@ -39,7 +39,7 @@ class FileManager
 
     public function getInputName()
     {
-        return basename($this->inputName, '.in');
+        return basename($this->inputName, '.txt');
     }
 
     public function write($fileName, $content)
