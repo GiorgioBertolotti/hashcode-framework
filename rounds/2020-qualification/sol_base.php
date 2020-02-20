@@ -14,3 +14,14 @@ Stopwatch::tik('Totale');
 
 Stopwatch::tok('Totale');
 Stopwatch::print('Totale');
+
+
+$array = [
+    0 => 100,
+    1 => 102
+];
+
+
+asort($array);
+
+print_r($array);

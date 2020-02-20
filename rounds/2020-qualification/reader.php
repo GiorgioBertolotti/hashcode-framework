@@ -44,7 +44,8 @@ class Library
     global $daysRemaining, $SCORE;
     $daysRemaining -= $this->signupTime;
     $booksTmp = $this->booksInLibrary;
-    usort($booksTmp, "cmp_books");
+    uasort($booksTmp, ['Library', 'cmp_books']);
+
     for ($i = 0; $i < $daysRemaining && count($booksTmp) > 0; $i++) {
       for ($j = 0; $j < $this->maxBooksShippedDaily; $j++) {
         $book = array_shift(array_slice($booksTmp, 0, 1));
@@ -58,18 +59,14 @@ class Library
     }
     $this->alreadyDone = true;
   }
-}
 
-/* helper functions */
-
-function cmp_books($a, $b)
-{
-  if ($a->score > $b->score)
-    return -1;
-  elseif ($a->score < $b->score)
-    return 1;
-  else
-    return 0;
+  public function cmp_books($a, $b)
+  {
+      if ($a->score == $b->score) {
+          return 0;
+      }
+      return ($a->score > $b->score) ? -1 : 1;
+  }
 }
 
 /* read input */
