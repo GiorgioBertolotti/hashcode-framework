@@ -60,12 +60,26 @@ class Library
     $this->alreadyDone = true;
   }
 
+  public function avgBookScore()
+  {
+    $tot = 0;
+    foreach ($this->booksInLibrary as $index => $book) {
+      $tot += $book->score;
+    }
+    return $tot / count($this->booksInLibrary);
+  }
+
+  public function runningTime()
+  {
+    return count($this->booksInLibrary) / $this->maxBooksShippedDaily;
+  }
+
   public function cmp_books($a, $b)
   {
-      if ($a->score == $b->score) {
-          return 0;
-      }
-      return ($a->score > $b->score) ? -1 : 1;
+    if ($a->score == $b->score) {
+      return 0;
+    }
+    return ($a->score > $b->score) ? -1 : 1;
   }
 }
 

@@ -31,6 +31,11 @@ function getBestLibrary()
     if ($library->alreadyDone)
       continue;
     $library->localScore = calculateLibraryScore($library);
+    if ($library->localScore == 0) {
+      $libraries[$i] = $libraries[0];
+      array_shift($libraries);
+      continue;
+    }
     if ($library->signupTime > $daysRemaining)
       continue;
     if ($bestLibrary == null || $library->localScore > $bestLibrary->localScore) {

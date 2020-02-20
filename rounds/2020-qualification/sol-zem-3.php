@@ -11,7 +11,7 @@ require_once 'reader.php';
 
 function calculateLibraryScore(Library $library)
 {
-  return ($library->maxBooksShippedDaily * count($library->booksInLibrary)) / $library->signupTime;
+  return ($library->avgBookScore() * $library->runningTime()) / $library->signupTime;
 }
 
 function removeBookFromLibraries(Book $book)
@@ -36,9 +36,8 @@ function getBestLibrary()
       array_shift($libraries);
       continue;
     }
-    if ($library->signupTime > $daysRemaining) {
+    if ($library->signupTime > $daysRemaining)
       continue;
-    }
     if ($bestLibrary == null || $library->localScore > $bestLibrary->localScore) {
       $bestLibrary = $library;
     }
