@@ -39,10 +39,7 @@ function getBestLibrary()
     $library = $libraries[$i];
     if ($library->alreadyDone)
       continue;
-    if ($numRemainingLibraries > 0.8 * $numLibraries)
-      $library->localScore = calculateLibraryScoreWithOccurrency($library);
-    else
-      $library->localScore = calculateLibraryScore($library);
+    $library->localScore = calculateLibraryScoreWithOccurrency($library);
     if ($library->localScore == 0) {
       $libraries[$i] = $libraries[0];
       array_shift($libraries);
