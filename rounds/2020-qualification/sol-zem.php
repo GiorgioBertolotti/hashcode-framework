@@ -11,7 +11,26 @@ require_once 'reader.php';
 
 function calculateLibraryScore(Library $library)
 {
-  return ($library->maxBooksShippedDaily * count($library->booksInLibrary)) / $library->signupTime;
+    global $daysRemaining;
+
+    $numBooks = count($library->booksInLibrary);
+    $localScore = 0;
+    $numeroPrevistiProcessati = $daysRemaining - $library->signupTime * $library->maxBooksShippedDaily;
+
+    foreach($library->booksInLibrary as $book)
+    {
+
+        $localScore += $book->score;
+        $numeroPrevistiProcessati --;
+
+        if($numeroPrevistiProcessati == 0) {
+            break;
+        }
+    }
+
+    return $localScore;
+
+  // return ($library->maxBooksShippedDaily * count($library->booksInLibrary)) / $library->signupTime;
 }
 
 function removeBookFromLibraries(Book $book)
@@ -27,18 +46,16 @@ function getBestLibrary()
   global $libraries, $daysRemaining;
   $bestLibrary = null;
   for ($i = 0; $i < count($libraries); $i++) {
+
+    $library =  $libraries[$i];
+    uasort($library->booksInLibrary, ['Library', 'cmp_books']);
+
     $library = $libraries[$i];
     if ($library->alreadyDone)
       continue;
     $library->localScore = calculateLibraryScore($library);
-    if ($library->localScore == 0) {
-      $libraries[$i] = $libraries[0];
-      array_shift($libraries);
+    if ($library->signupTime > $daysRemaining)
       continue;
-    }
-    if ($library->signupTime > $daysRemaining) {
-      continue;
-    }
     if ($bestLibrary == null || $library->localScore > $bestLibrary->localScore) {
       $bestLibrary = $library;
     }
