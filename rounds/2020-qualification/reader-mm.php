@@ -18,8 +18,8 @@ class Book
 
     public function __construct($id, $award)
     {
-        $this->id = (int)$id;
-        $this->award = (int)$award;
+        $this->id = (int) $id;
+        $this->award = (int) $award;
     }
 
     public function scan(Library $byLibrary)
@@ -55,15 +55,15 @@ class Library
     {
         /** @var Book[] $books */
         global $books;
-        $this->id = (int)$id;
+        $this->id = (int) $id;
         $this->books = [];
         [$booksCount, $this->signUpDuration, $this->shipsPerDay] = explode(' ', $fileRow1);
         foreach (explode(' ', $fileRow2) as $bookId) {
             /** @var Book $book */
-            $book = $books[(int)$bookId];
-            $this->books[(int)$bookId] = $books[(int)$bookId];
+            $book = $books[(int) $bookId];
+            $this->books[(int) $bookId] = $books[(int) $bookId];
             $book->inLibraries[$this->id] = $this;
-            $this->currentTotalAward += $this->books[(int)$bookId]->award;
+            $this->currentTotalAward += $this->books[(int) $bookId]->award;
         }
         uasort($this->books, function (Book $b1, Book $b2) {
             return $b1->award < $b2->award;
@@ -80,6 +80,20 @@ class Library
     {
         $this->isSignupped = true;
         //echo "Finish signup for {$this->id}\n";
+    }
+
+    public function runningTime()
+    {
+        return count($this->books) / $this->shipsPerDay;
+    }
+
+    public function totOccurrencies()
+    {
+        $occurrencies = 0;
+        foreach ($this->books as $index => $book) {
+            $occurrencies += count($book->inLibraries);
+        }
+        return $occurrencies;
     }
 }
 

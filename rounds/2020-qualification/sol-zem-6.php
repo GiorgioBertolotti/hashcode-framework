@@ -1,35 +1,25 @@
 <?php
 
-use Utils\Stopwatch;
 use Utils\Log;
+use Utils\Stopwatch;
 
-$fileName = 'a';
+$fileName = 'd';
 
 require_once 'reader.php';
 
 /* functions */
 
+function calculateLibraryScoreWithOccurrency(Library $library)
+{
+  return ($library->avgBookScore() * $library->totOccurrencies()) / $library->signupTime;
+}
+
 function calculateLibraryScore(Library $library)
 {
   global $daysRemaining;
-
-  $numBooks = count($library->booksInLibrary);
-  $localScore = 0;
-  $numeroPrevistiProcessati = $daysRemaining - $library->signupTime * $library->maxBooksShippedDaily;
-
-  foreach ($library->booksInLibrary as $book) {
-
-    $localScore += $book->score;
-    $numeroPrevistiProcessati--;
-
-    if ($numeroPrevistiProcessati == 0) {
-      break;
-    }
-  }
-
-  return $localScore;
-
-  // return ($library->maxBooksShippedDaily * count($library->booksInLibrary)) / $library->signupTime;
+  $boost = ($library->runningTime() + $library->signupTime) < $daysRemaining;
+  return ($library->totScore()) * ($boost ? 10 : 1) / $library->signupTime;
+  //return ($library->maxBooksShippedDaily * count($library->booksInLibrary)) / $library->signupTime;
 }
 
 function removeBookFromLibraries(Book $book)
@@ -42,18 +32,20 @@ function removeBookFromLibraries(Book $book)
 
 function getBestLibrary()
 {
-  global $libraries, $daysRemaining;
+  global $libraries, $daysRemaining, $numLibraries;
   $bestLibrary = null;
+  $numRemainingLibraries = count($libraries);
   for ($i = 0; $i < count($libraries); $i++) {
-
-    $library =  $libraries[$i];
-    uasort($library->booksInLibrary, ['Library', 'cmp_books']);
-
+    $library = $libraries[$i];
     if ($library->alreadyDone)
       continue;
-    $library->localScore = calculateLibraryScore($library);
-    if ($library->signupTime > $daysRemaining)
+    $library->localScore = count($library->booksInLibrary);
+    if ($library->localScore == 0) {
       continue;
+    }
+    if ($library->signupTime > $daysRemaining) {
+      continue;
+    }
     if ($bestLibrary == null || $library->localScore > $bestLibrary->localScore) {
       $bestLibrary = $library;
     }
@@ -62,7 +54,6 @@ function getBestLibrary()
 }
 
 /* runtime */
-Stopwatch::tik('Totale');
 
 $daysRemaining = $numDays;
 
@@ -92,6 +83,3 @@ array_unshift($output, $countLibs);
 $fileManager->output(implode("\n", $output));
 
 //print_r($libraries);
-
-Stopwatch::tok('Totale');
-Stopwatch::print('Totale');
