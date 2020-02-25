@@ -10,3 +10,4 @@ rounds/**/cache
 rounds/**/serialize
 rounds/**/charts
 rounds/**/graphs
+rounds/**/cerberus
