@@ -32,6 +32,11 @@ Class VisualStandard extends Visual
         imagefill($this->image, 0, 0, $this->colors[$color]);
     }
 
+    public function setBgPoligon($points, $color)
+    {
+        imagefilledpolygon($this->image, $points, count($points) / 2, $this->colors[$color]);
+    }
+
     public function setLine($r1, $c1, $r2, $c2, $color)
     {
         // x => c | y => r
