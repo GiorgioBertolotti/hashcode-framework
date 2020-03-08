@@ -1,13 +1,20 @@
 <?php
 
-use Utils\Stopwatch;
+use Utils\Cerberus;
 use Utils\Log;
+use Utils\Stopwatch;
 
-$fileName = 'a';
+require_once '../../bootstrap.php';
+
+// Cerberus
+
+$fileName = null;
+$kPow = null;
+Cerberus::runClient(['fileName' => 'a', 'kPow' => 1.0]);
 
 require_once 'reader.php';
 
-/* runtime */
+// Runtime
 
 $SCORE = 0;
 
