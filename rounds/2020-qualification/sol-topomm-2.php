@@ -1,6 +1,13 @@
 <?php
 
-$fileName = 'd';
+
+use Utils\Cerberus;
+
+require_once '../../bootstrap.php';
+$fileName = null;
+$kPow = 1.0;
+$kPow2 = 1.0;
+Cerberus::runClient(['fileName' => 'e', 'kPow' => 0.65, 'kPow2' => 1.0]);
 
 include 'reader-mm.php';
 
@@ -78,7 +85,7 @@ for ($t = 0; $t < $countDays; $t++) {
         $libraryScores = [];
         $remainingTime = $countDays - $t;
         foreach ($notSignuppedLibraries as $nsl) {
-            if ($fileName === 'f') {
+            if ($fileName === 'f' || $fileName === 'e') {
                 $nsl->recalculateDCurrentTotalAward($remainingTime);
             }
             $avanzo = $remainingTime - $nsl->signUpDuration;
@@ -87,16 +94,20 @@ for ($t = 0; $t < $countDays; $t++) {
                     case 'a':
                     case 'b':
                     case 'c':
-                        $score = $nsl->currentTotalAward / $nsl->signUpDuration; // per C
+                        $score = $nsl->currentTotalAward / $nsl->signUpDuration; // 5689822
                         break;
                     case 'd':
                         $score = count($nsl->books) + $nsl->rCurrentTotalAward / 1000000; // per D
                         break;
                     case 'e':
-                        $score = pow($nsl->currentTotalAward * $nsl->shipsPerDay, 0.71) / $nsl->signUpDuration * pow($avanzo / $remainingTime, 8.9); // per E
+                        //$score = pow($nsl->currentTotalAward * $nsl->shipsPerDay, 0.71) / $nsl->signUpDuration * pow($avanzo / $remainingTime, 8.9); // 5132856
+                        //$score = pow($nsl->dLastChunkAward * $nsl->shipsPerDay, 0.71) / $nsl->signUpDuration * pow($avanzo / $remainingTime, 8.9); // 5175458
+                        //$score = pow($nsl->currentTotalAward, 0.3) * $nsl->dLastChunkAward / $nsl->signUpDuration; // 
+                        //$score = pow($nsl->dLastChunkAward * $nsl->shipsPerDay, $kPow) / $nsl->signUpDuration * pow($avanzo / $remainingTime, $kPow2); // CERBERUS
+                        $score = pow($nsl->dLastChunkAward * $nsl->shipsPerDay, 0.65) / $nsl->signUpDuration * pow($avanzo / $remainingTime, 1.0); // 5182956
                         break;
                     case 'f':
-                        $score = $nsl->dCurrentTotalAward / pow($nsl->signUpDuration, 0.6); // per F
+                        $score = $nsl->dCurrentTotalAward / pow($nsl->signUpDuration, 0.6); // 5345656
                         break;
                 }
                 //$score = $nsl->currentTotalAward / $nsl->signUpDuration; // per C

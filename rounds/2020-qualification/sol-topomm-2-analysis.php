@@ -1,6 +1,14 @@
 <?php
 
-$fileName = 'd';
+
+use Utils\Cerberus;
+use Utils\Log;
+
+require_once '../../bootstrap.php';
+$fileName = null;
+$kPow = 1.0;
+$kPow2 = 1.0;
+Cerberus::runClient(['fileName' => 'e', 'kPow' => 0.65, 'kPow2' => 1.0]);
 
 include 'reader-mm.php';
 
@@ -78,7 +86,7 @@ for ($t = 0; $t < $countDays; $t++) {
         $libraryScores = [];
         $remainingTime = $countDays - $t;
         foreach ($notSignuppedLibraries as $nsl) {
-            if ($fileName === 'f') {
+            if ($fileName === 'f' || $fileName === 'e') {
                 $nsl->recalculateDCurrentTotalAward($remainingTime);
             }
             $avanzo = $remainingTime - $nsl->signUpDuration;
@@ -87,16 +95,20 @@ for ($t = 0; $t < $countDays; $t++) {
                     case 'a':
                     case 'b':
                     case 'c':
-                        $score = $nsl->currentTotalAward / $nsl->signUpDuration; // per C
+                        $score = $nsl->currentTotalAward / $nsl->signUpDuration; // 5689822
                         break;
                     case 'd':
                         $score = count($nsl->books) + $nsl->rCurrentTotalAward / 1000000; // per D
                         break;
                     case 'e':
-                        $score = pow($nsl->currentTotalAward * $nsl->shipsPerDay, 0.71) / $nsl->signUpDuration * pow($avanzo / $remainingTime, 8.9); // per E
+                        //$score = pow($nsl->currentTotalAward * $nsl->shipsPerDay, 0.71) / $nsl->signUpDuration * pow($avanzo / $remainingTime, 8.9); // 5132856
+                        //$score = pow($nsl->dLastChunkAward * $nsl->shipsPerDay, 0.71) / $nsl->signUpDuration * pow($avanzo / $remainingTime, 8.9); // 5175458
+                        //$score = pow($nsl->currentTotalAward, 0.3) * $nsl->dLastChunkAward / $nsl->signUpDuration; // 
+                        //$score = pow($nsl->dLastChunkAward * $nsl->shipsPerDay, $kPow) / $nsl->signUpDuration * pow($avanzo / $remainingTime, $kPow2); // CERBERUS
+                        $score = pow($nsl->dLastChunkAward * $nsl->shipsPerDay, 0.65) / $nsl->signUpDuration * pow($avanzo / $remainingTime, 1.0); // 5182956
                         break;
                     case 'f':
-                        $score = $nsl->dCurrentTotalAward / pow($nsl->signUpDuration, 0.6); // per F
+                        $score = $nsl->dCurrentTotalAward / pow($nsl->signUpDuration, 0.6); // 5345656
                         break;
                 }
                 //$score = $nsl->currentTotalAward / $nsl->signUpDuration; // per C
@@ -125,7 +137,7 @@ for ($t = 0; $t < $countDays; $t++) {
 
 }
 
-echo "\n\nTotal score: {$totalScore}";
+echo "\n\nTotal score: {$totalScore}\n\n";
 
 // Output
 
@@ -136,14 +148,71 @@ foreach ($orderedSignuppedLibraries as $lId => $sl) {
     }
 }
 $output .= count($signuppedLibraries) . "\n";
+
+$lastDayAwards = [];
 foreach ($orderedSignuppedLibraries as $sl) {
     $scannedBooksCount = count($sl->scannedBooks);
     $output .= "{$sl->id} {$scannedBooksCount}\n";
     $scannedIds = [];
+
+    $lastDayAward = 0;
+    $scannedBookNumber = 0;
+
     foreach ($sl->scannedBooks as $sb) {
         $scannedIds[] = $sb->id;
+        if ($scannedBookNumber >= count($sl->scannedBooks) - $sl->shipsPerDay)
+            $lastDayAward += $sb->award;
+        $scannedBookNumber++;
+        /*foreach ($orderedSignuppedLibraries as $_sl) if ($_sl->id != $sl->id) {
+            foreach ($_sl->originalBooks as $_b) {
+                if ($_b->id == $sb->id) {
+                    Log::out('Book ' . $_b->id . ' (award=' . $_b->award . ') present also in ' . $_sl->id . '', 1);
+                }
+            }
+        }*/
     }
     $output .= implode(" ", $scannedIds) . "\n";
+    Log::out("Lib " . $sl->id . " => signupDuration=".$sl->signUpDuration." // lastDayAward=" . $lastDayAward . ' // ships = ' . $sl->shipsPerDay . ' // awardDivShips = ' . round($lastDayAward / $sl->shipsPerDay, 2) . '');
 }
 
 $fileManager->output($output);
+
+/*
+ * Concept: runno questo primo algo (sol-topomm-2-analysis @ e)
+ * Creo algo sol-topomm-2-analysis-part-2:
+ * Legge input di sol-topomm-2-analysis
+ * Parte dalla cima e valuta per ogni libro [A]:
+ *  1) Quanti punti farebbe (perderebbe) se fosse tolto dalla lib (e quindi fosse messo il primo libro [B] degli scartati)
+ *  2.1) Tra tutte le (eventuali) lib alternative (tra le successive?) che lo hanno, valuta per ognuna il punteggio perso
+ *       per l'aver tolto il peggiore tra i libri selezionati [C] (per far posto ad [A])
+ *  2.2) Il delta score dell'operazione è quindi ovviamente [B]-[C] (in quanto [A] rimane, viene solo switchato tra un lib e un'altra)
+ * 3) Calcola tra tutte le possibilità quella con delta score maggiore, esegue lo switch e aggiunge il delta score al punteggio finale
+ * 4) Itero N volte?
+ *
+ * 2020-02-29 15:02:21 =>    Book 79903 (award=250) present also in 244
+2020-02-29 15:02:21 =>    Book 79903 (award=250) present also in 273
+2020-02-29 15:02:21 =>    Book 23967 (award=250) present also in 970
+2020-02-29 15:02:21 =>    Book 63011 (award=249) present also in 232
+2020-02-29 15:02:21 =>    Book 56764 (award=248) present also in 512
+2020-02-29 15:02:21 =>    Book 56764 (award=248) present also in 457
+2020-02-29 15:02:21 =>    Book 87189 (award=248) present also in 691
+2020-02-29 15:02:21 =>    Book 30097 (award=248) present also in 443
+2020-02-29 15:02:21 =>    Book 30097 (award=248) present also in 828
+2020-02-29 15:02:21 =>    Book 90748 (award=247) present also in 834
+2020-02-29 15:02:21 =>    Book 90748 (award=247) present also in 56
+2020-02-29 15:02:21 =>    Book 75939 (award=247) present also in 244
+...
+2020-02-29 15:06:44 => Lib 602 => signupDuration=1 // lastDayAward=260 // ships = 2 // awardDivShips = 130
+...
+...
+2020-02-29 15:06:44 => Lib 972 => signupDuration=1 // lastDayAward=254 // ships = 2 // awardDivShips = 127
+2020-02-29 15:06:44 => Lib 522 => signupDuration=1 // lastDayAward=251 // ships = 2 // awardDivShips = 125.5
+2020-02-29 15:06:44 => Lib 717 => signupDuration=1 // lastDayAward=233 // ships = 2 // awardDivShips = 116.5
+2020-02-29 15:06:44 => Lib 157 => signupDuration=1 // lastDayAward=244 // ships = 2 // awardDivShips = 122
+2020-02-29 15:06:44 => Lib 72 => signupDuration=1 // lastDayAward=248 // ships = 2 // awardDivShips = 124
+2020-02-29 15:06:44 => Lib 100 => signupDuration=1 // lastDayAward=234 // ships = 2 // awardDivShips = 117
+2020-02-29 15:06:44 => Lib 715 => signupDuration=1 // lastDayAward=233 // ships = 2 // awardDivShips = 116.5
+ *
+ * */
+
+
