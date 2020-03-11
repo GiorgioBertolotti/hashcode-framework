@@ -12,9 +12,14 @@ class Book
     public $award;
     /** @var int $rAward */
     public $rAward;
+    /** @var bool $scanned */
+    public $scanned;
 
     /** @var Library[] $inLibraries */
     public $inLibraries = [];
+
+    /** @var Library[] $originalInLibraries */
+    public $originalInLibraries = [];
 
     public function __construct($id, $award)
     {
@@ -24,6 +29,7 @@ class Book
 
     public function scan(Library $byLibrary)
     {
+        $this->scanned = true;
         foreach ($this->inLibraries as $library) {
             unset($library->books[$this->id]);
             $library->currentTotalAward -= $this->award;
@@ -31,6 +37,46 @@ class Book
         }
         $byLibrary->scannedBooks[$this->id] = $this;
         //echo "Scan book {$this->id} by library {$byLibrary->id}\n";
+    }
+
+    public function scanFirst(Library $byLibrary)
+    {
+        $this->scanned = true;
+        foreach ($this->inLibraries as $library) {
+            unset($library->books[$this->id]);
+            $library->currentTotalAward -= $this->award;
+            $library->rCurrentTotalAward -= $this->rAward;
+        }
+        $byLibrary->scannedBooks[$this->id] = $this;
+
+        uasort($byLibrary->scannedBooks, function (Book $b1, Book $b2) {
+            return $b1->award < $b2->award;
+        });
+    }
+
+    public function unscan(Library $byLibrary)
+    {
+        $this->scanned = false;
+        foreach ($this->originalInLibraries as $library) {
+            $library->books[$this->id] = $this;
+            $library->currentTotalAward += $this->award;
+            $library->rCurrentTotalAward += $this->rAward;
+        }
+        unset($byLibrary->scannedBooks[$this->id]);
+    }
+
+    public function unscanFirst(Library $byLibrary)
+    {
+        $this->scanned = false;
+        foreach ($this->originalInLibraries as $library) {
+            $library->books[$this->id] = $this;
+            $library->currentTotalAward += $this->award;
+            $library->rCurrentTotalAward += $this->rAward;
+            uasort($library->books, function (Book $b1, Book $b2) {
+                return $b1->award < $b2->award;
+            });
+        }
+        unset($byLibrary->scannedBooks[$this->id]);
     }
 }
 
@@ -43,11 +89,15 @@ class Library
     public $shipsPerDay;
     /** @var Book[] $books */
     public $books;
+    /** @var Book[] $originalBooks */
+    public $originalBooks;
     // Computed
     public $isSignupped = false;
     public $signupFinishAt = -1;
     public $currentTotalAward = 0;
     public $rCurrentTotalAward = 0;
+    public $dCurrentTotalAward = 0;
+    public $dLastChunkAward = 0;
     /** @var Book[] $scannedBooks */
     public $scannedBooks = [];
 
@@ -68,6 +118,7 @@ class Library
         uasort($this->books, function (Book $b1, Book $b2) {
             return $b1->award < $b2->award;
         });
+        $this->originalBooks = $this->books;
     }
 
     public function startSignup($now)
@@ -82,18 +133,25 @@ class Library
         //echo "Finish signup for {$this->id}\n";
     }
 
-    public function runningTime()
+    public function recalculateDCurrentTotalAward($remainingTime)
     {
-        return count($this->books) / $this->shipsPerDay;
-    }
-
-    public function totOccurrencies()
-    {
-        $occurrencies = 0;
-        foreach ($this->books as $index => $book) {
-            $occurrencies += count($book->inLibraries);
+        $this->dCurrentTotalAward = 0;
+        $dLastChunkAward = 0;
+        $maxBooksCount = ($remainingTime - $this->signUpDuration) * $this->shipsPerDay;
+        foreach ($this->books as $book) {
+            if ($maxBooksCount < 0) break;
+            $this->dCurrentTotalAward += $book->award;
+            if ($maxBooksCount <= $this->shipsPerDay) {
+                $dLastChunkAward += $book->award;
+            }
+            $maxBooksCount--;
         }
-        return $occurrencies;
+
+        if (ceil(count($this->books) / $this->shipsPerDay) + $this->signUpDuration >= $remainingTime) {
+            $this->dLastChunkAward = $dLastChunkAward;
+        } else {
+            $this->dLastChunkAward = 0;
+        }
     }
 }
 
