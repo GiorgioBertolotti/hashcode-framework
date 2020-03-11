@@ -7,18 +7,18 @@ require_once '../../bootstrap.php';
 
 // classes
 
-class TestCase
+class Test
 {
   public $boardSize;
   public $multiplier;
-  public $maxPerMag;
+  public $maxPerBag;
   public $wastedRice = 0;
 
   public function __construct($baseRice, $boardSize, $grainsPerBag)
   {
     $this->multiplier = $baseRice;
     $this->boardSize = $boardSize;
-    $this->maxPerMag = $grainsPerBag;
+    $this->maxPerBag = $grainsPerBag;
   }
 }
 
@@ -28,13 +28,13 @@ $fileManager = new FileManager($fileName);
 $fileContent = $fileManager->get();
 
 $fileRows = explode("\n", $fileContent);
-list($numTestCases) = explode(' ', $fileRows[0]);
+list($numTests) = explode(' ', $fileRows[0]);
 
-$testCases = [];
+$tests = [];
 
-for ($i = 0; $i < $numTestCases; $i++) {
+for ($i = 0; $i < $numTests; $i++) {
   list($baseRice, $boardSize, $grainsPerBag) = explode(' ', $fileRows[1 + $i]);
-  array_push($testCases, new TestCase($baseRice, $boardSize, $grainsPerBag));
+  array_push($tests, new Test($baseRice, $boardSize, $grainsPerBag));
 }
 
 Log::out("Finished input reading", 0);
