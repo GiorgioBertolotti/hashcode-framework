@@ -12,6 +12,7 @@ class TestCase
   private $boardSize;
   private $multiplier;
   private $maxPerMag;
+  private $wastedRice = 0;
 
   public function __construct($baseRice, $boardSize, $grainsPerBag)
   {
