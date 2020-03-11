@@ -9,10 +9,10 @@ require_once '../../bootstrap.php';
 
 class TestCase
 {
-  private $boardSize;
-  private $multiplier;
-  private $maxPerMag;
-  private $wastedRice = 0;
+  public $boardSize;
+  public $multiplier;
+  public $maxPerMag;
+  public $wastedRice = 0;
 
   public function __construct($baseRice, $boardSize, $grainsPerBag)
   {
@@ -30,8 +30,6 @@ $fileContent = $fileManager->get();
 $fileRows = explode("\n", $fileContent);
 list($numTestCases) = explode(' ', $fileRows[0]);
 
-print_r($numTestCases);
-
 $testCases = [];
 
 for ($i = 0; $i < $numTestCases; $i++) {
@@ -39,5 +37,4 @@ for ($i = 0; $i < $numTestCases; $i++) {
   array_push($testCases, new TestCase($baseRice, $boardSize, $grainsPerBag));
 }
 
-print_r($testCases);
 Log::out("Finished input reading", 0);
