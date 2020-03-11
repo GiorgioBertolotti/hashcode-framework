@@ -28,7 +28,7 @@ $fileContent = $fileManager->get();
 
 $fileRows = explode("\n", $fileContent);
 list($numTestCases) = explode(' ', $fileRows[0]);
-echo "ciao";
+
 print_r($numTestCases);
 
 $testCases = [];
