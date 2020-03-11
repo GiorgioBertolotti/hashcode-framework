@@ -10,14 +10,14 @@ require_once '../../bootstrap.php';
 class TestCase
 {
   private $boardSize;
-  private $baseRice;
-  private $grainsPerBag;
+  private $multiplier;
+  private $maxPerMag;
 
   public function __construct($baseRice, $boardSize, $grainsPerBag)
   {
-    $this->baseRice = $baseRice;
+    $this->multiplier = $baseRice;
     $this->boardSize = $boardSize;
-    $this->grainsPerBag = $grainsPerBag;
+    $this->maxPerMag = $grainsPerBag;
   }
 }
 
