@@ -53,13 +53,14 @@ foreach ($developers AS $dev1) {
             $tuple[] = $tupla;
         }
     }
-    Log::out("Stato: " . $countDev++ . " / " . $totalDev, 0);
+    Log::out("Stato (step 1): " . $countDev++ . " / " . $totalDev, 0);
 }
 
 // Ordiniamo tutto per bene
 usort($tuple, cmpFriends);
 foreach ($developers AS $dev1) {
     usort($bestFriends[$dev1->id], cmpFriends);
+    Log::out("Stato (step 2): " . $countDev++ . " / " . $totalDev, 0);
 }
 
 $totalScore = 0;
@@ -70,6 +71,7 @@ $disposizioneDeveloper[] = $tuple[0]->repl1;
 $developers[$tuple[0]->repl1->id]->placed = true;
 unset($tuple[0]);
 while ($posizionati<count($developers)) {
+    Log:out("Stato (step 3): " . $posizionati . " / " . $totalDev, 0);
     do {
         $successivo = $bestFriends[$disposizioneDeveloper[$posizionati-1]->id][0];
         unset($bestFriends[$disposizioneDeveloper[$posizionati-1]][0]);
