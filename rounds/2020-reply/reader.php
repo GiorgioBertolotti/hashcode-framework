@@ -83,7 +83,7 @@ $startingFrom = 3 + $height + $numDevs;
 $managers = [];
 for ($i = 0; $i < $numProjManager; $i++) {
     $managerProps = explode(' ', $content[$startingFrom + $i]);
-    $managers[] = new ProjectManager($i, $devProps[0], $devProps[1]);
+    $managers[] = new ProjectManager($i, $managerProps[0], $managerProps[1]);
 }
 
 Log::out("Finish input reading", 0);

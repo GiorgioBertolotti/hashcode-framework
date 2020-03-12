@@ -25,22 +25,7 @@ class Tupla
 
 Stopwatch::tik('Tuple');
 
-$all_replayers = array_merge($developers, $managers);
-$tuple = [];
-for ($i = 0; $i < count($all_replayers); $i++) {
-  for ($j = 0; $j < count($all_replayers); $j++) {
-    if ($i == $j)
-      continue;
-    $repl1 = $all_replayers[$i];
-    $repl2 = $all_replayers[$j];
-    $score = calculateBonus($repl1, $repl2);
-
-    if ($score > 0) {
-      $tuple[] = new Tupla($repl1, $repl2, $score);
-    }
-  }
-  Log::out("Replayers rimanenti: " . (count($all_replayers) - $i), 0);
-}
+//for($r = 0; $r < count($))
 
 Stopwatch::tok('Tuple');
 Stopwatch::print('Tuple');
