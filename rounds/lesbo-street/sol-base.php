@@ -6,7 +6,7 @@ use Utils\Log;
 $fileName = 'a';
 
 require_once 'reader.php';
-
+// commento
 
 echo "minCol : " . $minCol . PHP_EOL
     ."maxCol:" . $maxCol . PHP_EOL
