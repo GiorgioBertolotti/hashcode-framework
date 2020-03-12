@@ -40,7 +40,7 @@ class ProjectManager
     }
 }
 
-function matchEmployees($replayer1, $replayer2)
+function calculateBonus($replayer1, $replayer2)
 {
     $bonus = ($replayer1->company == $replayer2->company) ? $replayer1->bonus * $replayer2->bonus : 0;
     if (get_class($replayer1) == "Developer" && get_class($replayer2) == "Developer") {
@@ -54,6 +54,8 @@ function matchEmployees($replayer1, $replayer2)
     return $bonus;
 }
 
+
+
 Stopwatch::tik('Input');
 
 // Reading the inputs
@@ -63,10 +65,8 @@ $content = explode("\n", $fileManager->get());
 list($width, $height) = explode(' ', $content[0]);
 
 $office = [];
-foreach ($content as $rowNumber => $row) {
-    if ($rowNumber > 0) {
-        $office[] = explode(' ', $row);
-    }
+for ($i = 0; $i < $height; $i++) {
+    $office[] = str_split($content[1 + $i]);
 }
 
 list($numDevs) = explode(' ', $content[1 + $height]);
@@ -90,3 +90,5 @@ for ($i = 0; $i < $numProjManager; $i++) {
 
 Log::out("Finish input reading", 0);
 Stopwatch::tok('Input');
+
+print_r($office);
