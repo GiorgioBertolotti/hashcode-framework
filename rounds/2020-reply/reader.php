@@ -54,8 +54,6 @@ function calculateBonus($replayer1, $replayer2)
     return $bonus;
 }
 
-
-
 Stopwatch::tik('Input');
 
 // Reading the inputs
@@ -90,5 +88,3 @@ for ($i = 0; $i < $numProjManager; $i++) {
 
 Log::out("Finish input reading", 0);
 Stopwatch::tok('Input');
-
-print_r($office);
