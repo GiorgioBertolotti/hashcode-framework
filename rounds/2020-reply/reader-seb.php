@@ -58,7 +58,7 @@ for ($i = 0; $i < $height; $i++) {
 list($numDevs) = explode(' ', $content[1 + $height]);
 
 $startingFrom = 2 + $height;
-$developers = [];
+$employees = [];
 for ($i = 0; $i < $numDevs; $i++) {
     $devProps = explode(' ', $content[$startingFrom + $i]);
     $skills = array_splice($devProps, 3, count($devProps) - 1);
@@ -68,7 +68,6 @@ for ($i = 0; $i < $numDevs; $i++) {
 list($numProjManager) = explode(' ', $content[2 + $height + $numDevs]);
 
 $startingFrom = 3 + $height + $numDevs;
-$managers = [];
 for ($i = 0; $i < $numProjManager; $i++) {
     $managerProps = explode(' ', $content[$startingFrom + $i]);
     $employees[] = new Employee('M', $i, $managerProps[0], $managerProps[1], []);
