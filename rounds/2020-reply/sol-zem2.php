@@ -5,7 +5,7 @@ use Utils\Stopwatch;
 
 require_once '../../bootstrap.php';
 
-$fileName = 'b';
+$fileName = 'a';
 
 include 'reader.php';
 
@@ -23,9 +23,30 @@ class Tupla
   }
 }
 
-Stopwatch::tik('Tuple');
+Stopwatch::tik('Mappa');
 
-//for($r = 0; $r < count($))
+for ($r = 0; $r < count($office); $r++) {
+  $row = $office[$r];
+  for ($c = 0; $c < count($row); $c++) {
+    $cell = $row[$c];
+    if ($cell == '#')
+      continue;
+    if ($c != count($row) - 1) {
+      $rightSit = $office[$r][$c + 1];
+      if ($rightSit != '#') {
+        // c'è un posto a destra
+        Log::out($cell . " ha un posto a destra: " . $rightSit, 0);
+      }
+    }
+    if ($r != count($office) - 1) {
+      $downSit = $office[$r + 1][$c];
+      if ($downSit != '#') {
+        // c'è un posto sotto
+        Log::out($cell . " ha un posto sotto: " . $downSit, 0);
+      }
+    }
+  }
+}
 
-Stopwatch::tok('Tuple');
-Stopwatch::print('Tuple');
+Stopwatch::tok('Mappa');
+Stopwatch::print('Mappa');
