@@ -40,6 +40,20 @@ class ProjectManager
     }
 }
 
+function matchEmployees($replayer1, $replayer2)
+{
+    $bonus = ($replayer1->company == $replayer2->company) ? $replayer1->bonus * $replayer2->bonus : 0;
+    if (get_class($replayer1) == "Developer" && get_class($replayer2) == "Developer") {
+        // calc skills bonus
+        $intersection = array_intersect($replayer1->skills, $replayer2->skills);
+        if (count($intersection) != 0) {
+            $union = array_unique(array_merge($replayer1->skills, $replayer2->skills));
+            $bonus += count($intersection) * count($union);
+        }
+    }
+    return $bonus;
+}
+
 Stopwatch::tik('Input');
 
 // Reading the inputs
