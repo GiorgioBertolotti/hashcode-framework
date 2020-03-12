@@ -15,6 +15,9 @@ class Developer
     public $bonus;
     public $numSkills;
     public $skills;
+    public $placed;
+    public $r;
+    public $c;
 
     public function __construct($id, $company, $bonus, $skills)
     {
@@ -23,6 +26,9 @@ class Developer
         $this->bonus = $bonus;
         $this->numSkills = count($skills);
         $this->skills = $skills;
+        $this->placed = false;
+        $this->r = null;
+        $this->c = null;
     }
 }
 
@@ -31,12 +37,18 @@ class ProjectManager
     public $id;
     public $company;
     public $bonus;
+    public $placed;
+    public $r;
+    public $c;
 
     public function __construct($id, $company, $bonus)
     {
         $this->id = $id;
         $this->company = $company;
         $this->bonus = $bonus;
+        $this->placed = false;
+        $this->r = null;
+        $this->c = null;
     }
 }
 

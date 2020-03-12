@@ -25,6 +25,25 @@ class Tupla
 
 Stopwatch::tik('Mappa');
 
+$peopleInOffice = [];
+
+for ($r = 0; $r < count($office); $r++) {
+  $row = $office[$r];
+  for ($c = 0; $c < count($row); $c++) {
+    $cell = $row[$c];
+    $peopleInOffice[$r][$c] = null;
+  }
+}
+
+$all_replayers = array_merge($developers, $managers);
+$companies = [];
+for ($i = 0; $i < count($all_replayers); $i++) {
+  $replayer = $all_replayers[$i];
+  $companies[$replayer->company][] = $replayer;
+}
+
+print_r($companies);
+
 for ($r = 0; $r < count($office); $r++) {
   $row = $office[$r];
   for ($c = 0; $c < count($row); $c++) {
