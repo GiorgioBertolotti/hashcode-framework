@@ -16,6 +16,7 @@ class Employee
     public $bonus;
     public $numSkills;
     public $skills;
+    public $coordinates = [];
 
     public function __construct($type, $id, $company, $bonus, $skills)
     {
@@ -59,19 +60,27 @@ list($numDevs) = explode(' ', $content[1 + $height]);
 
 $startingFrom = 2 + $height;
 $employees = [];
+$counter = 0;
 for ($i = 0; $i < $numDevs; $i++) {
     $devProps = explode(' ', $content[$startingFrom + $i]);
     $skills = array_splice($devProps, 3, count($devProps) - 1);
     $employees[] = new Employee('D', $i, $devProps[0], $devProps[1], $skills);
+    $developers[] = new Employee('D', $i, $devProps[0], $devProps[1], $skills);
+    $counter ++;
 }
 
 list($numProjManager) = explode(' ', $content[2 + $height + $numDevs]);
 
+$managers = [];
 $startingFrom = 3 + $height + $numDevs;
 for ($i = 0; $i < $numProjManager; $i++) {
     $managerProps = explode(' ', $content[$startingFrom + $i]);
-    $employees[] = new Employee('M', $i, $managerProps[0], $managerProps[1], []);
+    $employees[$counter] = new Employee('M', $counter, $managerProps[0], $managerProps[1], []);
+    $managers[$counter] = new Employee('M', $counter, $managerProps[0], $managerProps[1], []);
+    $counter++;
 }
+
+$dipendentiTotali = $employees;
 
 Log::out("Finish input reading", 0);
 Stopwatch::tok('Input');
