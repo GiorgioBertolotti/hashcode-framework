@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 
 require_once '../../bootstrap.php';
 
-$fileName = 'a';
+$fileName = 'f';
 
 include 'reader-seb.php';
 
@@ -24,32 +24,71 @@ function getBestEmployeBySkills($employeStart)
         $bestScore = 0;
         $bestEmployeeByTop = null;
         foreach ($employees as $employee) {
-            $skillsComuni = count(array_intersect($employee->skills, $employeStart->skills));
-            $skillsDiverse = max(count($employee->skills), count($employeStart->skills)) - $skillsComuni;
-            if ($skillsComuni == count($employeStart->skills) && count($employee->skills) == count($employeStart->skills)) {
-                //le skills di entrambi i dipendenti sono identifici score = 0
-                continue;
-            } else if ($bestScore == 0 || $bestScore < ($skillsComuni * $skillsDiverse)) {
-                $bestScore = ($skillsComuni * $skillsDiverse);
-                $bestEmployeeByTop = $employee;
-            }
+            /** @var Employee $employee */
+            if ($employee->type == 'D' && empty($employee->coordinates)) {
+                if($employee->company == $employeStart->company)
+                    $localScore = $employee->bonus * $employeStart->bonus;
+                else $localScore = 0;
+
+                $skillsComuni = count(array_intersect($employee->skills, $employeStart->skills));
+                $skillsDiverse = max(count($employee->skills), count($employeStart->skills)) - $skillsComuni;
+                /*if ($skillsComuni == count($employeStart->skills) && count($employee->skills) == count($employeStart->skills)) {
+                    //le skills di entrambi i dipendenti sono identifici score = 0
+                    continue;
+                } else */if ($bestScore == 0 || $bestScore < ($skillsComuni * $skillsDiverse + $localScore)) {
+                    $bestScore = ($skillsComuni * $skillsDiverse) + $localScore;
+                    $bestEmployeeByTop = $employee;
+                }
+            } else continue;
         }
 
         return ['employee' => $bestEmployeeByTop, 'localScore' => $bestScore];
     } else
-        return ['score' => 0];
+        return ['localScore' => 0];
 }
 
 
 function getBestDeveloperHere($rowId, $columnId)
 {
-    global $employees, $office, $positions;
+    global $employees, $office, $posizionato, $developers, $worstPopularCompany;
 
-    // nessuna posizione ancora assegnata prendo il primo developer
-    if (empty($positions)) {
-        foreach ($employees as $employee) {
-            if ($employee->type = 'D') return $employee;
+
+    if($office[$rowId][$columnId - 1] == '#' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == '#') {
+        // getWorstDeveloper()
+
+        $developers2 = $developers;
+        usort($developers2, "cmp2");
+        foreach($developers2 as $developer) {
+            if($developer->company == $worstPopularCompany) {
+                return $developer;
+            }
         }
+    }
+
+    if ($posizionato == 0) {
+
+        //se sono nella situa:
+        /**
+         * ###
+         * #D#
+         * ###
+         * trovo il developer piu merda di tutti ovvero quello con meno skills (forse con azienda meno popolare? tra tutti)
+         */
+
+
+        $bestDeveloper = null;
+        foreach ($employees as $employee) {
+            if ($employee->type = 'D' && empty($employee->coordinates)) {
+                $bestDeveloper = $employee;
+                break;
+            }
+        }
+
+        if ($office[$rowId + 1][$columnId] == '_') {
+            return getBestEmployeBySkills($bestDeveloper);
+        }
+
+        return $bestDeveloper;
     } else {
         $topEmploye = $office[$rowId][$columnId - 1];
         $bestEmployeByTop = getBestEmployeBySkills($topEmploye);
@@ -66,12 +105,16 @@ function getBestDeveloperHere($rowId, $columnId)
 
         $bestScore = max([$bestEmployeByTop['localScore'], $bestEmployeByRight['localScore'], $bestEmployeByBottom['localScore'], $bestEmployeByLeft['localScore']]);
 
-        if($bestEmployeByTop['localScore'] && $bestEmployeByTop['localScore'] == $bestScore) return $bestEmployeByTop['employee'];
-        if($bestEmployeByRight['localScore'] && $bestEmployeByRight['localScore'] == $bestScore) return $bestEmployeByRight['employee'];
-        if($bestEmployeByBottom['localScore'] && $bestEmployeByBottom['localScore'] == $bestScore) return $bestEmployeByBottom['employee'];
-        if($bestEmployeByLeft['localScore'] && $bestEmployeByLeft['localScore'] == $bestScore) return $bestEmployeByLeft['employee'];
+        if ($bestEmployeByTop['localScore'] && $bestEmployeByTop['localScore'] == $bestScore) return $bestEmployeByTop['employee'];
+        if ($bestEmployeByRight['localScore'] && $bestEmployeByRight['localScore'] == $bestScore) return $bestEmployeByRight['employee'];
+        if ($bestEmployeByBottom['localScore'] && $bestEmployeByBottom['localScore'] == $bestScore) return $bestEmployeByBottom['employee'];
+        if ($bestEmployeByLeft['localScore'] && $bestEmployeByLeft['localScore'] == $bestScore) return $bestEmployeByLeft['employee'];
         else {
-            return array_values($employees)[0];
+            foreach ($employees as $employee) {
+                if ($employee->type == 'D' && empty($employee->coordinates)) {
+                    return $employee;
+                }
+            }
         }
     }
 }
@@ -108,7 +151,7 @@ function array_search_value($search_value, $array, $id_path)
 
 function getBestManagerHere($rowId, $columnId)
 {
-    global $managers, $office;
+    global $managers, $office, $worstPopularCompany;
 
     $topEmploye = $office[$rowId - 1][$columnId];
     $rightEmploye = $office[$rowId][$columnId + 1];
@@ -116,10 +159,10 @@ function getBestManagerHere($rowId, $columnId)
     $leftEmployee = $office[$rowId][$columnId - 1];
 
     $arrayCompanies = [
-        is_object($topEmploye) && $topEmploye->type == 'D' ? $topEmploye->company : null,
-        is_object($rightEmploye) && $rightEmploye->type == 'D' ? $rightEmploye->company : null,
-        is_object($bottomEmploye) && $bottomEmploye->type == 'D' ? $bottomEmploye->company : null,
-        is_object($leftEmployee) && $leftEmployee->type == 'D' ? $leftEmployee->company : null
+        is_object($topEmploye) ? $topEmploye->company : null,
+        is_object($rightEmploye) ? $rightEmploye->company : null,
+        is_object($bottomEmploye) ? $bottomEmploye->company : null,
+        is_object($leftEmployee) ? $leftEmployee->company : null
     ];
 
     $companies = array_count_values($arrayCompanies);
@@ -128,20 +171,37 @@ function getBestManagerHere($rowId, $columnId)
 
     $bestManager = null;
     foreach ($managers as $manager) {
-        if($mostPopularCompany) {
+        if (!empty($manager->coordinates)) continue;
+
+        if ($mostPopularCompany) {
             if ($manager->company == $mostPopularCompany) {
                 $bestManager = $manager;
                 break;
             }
-        }
-        else {
-            $bestManager = $manager;
+        } else {
+            // SUPER MIGLIORAMENTO prendere in questo caso il peggior manager con l'azienda piu scrausa e il bonus minore di tutti
+            // ora viene preso il primo porca troia
+            $bestManager = getWorstManager();
             break;
         }
     }
 
     return $bestManager;
 
+}
+
+function getWorstManager() {
+    global $managers, $worstPopularCompany;
+
+    $managers2 = $managers;
+    usort($managers2, "cmp3");
+    foreach($managers2 as $manager) {
+        if(!empty($manager->coordinates)) continue;
+        if($manager->company == $worstPopularCompany)
+            return $manager;
+    }
+
+    return array_values($managers2)[0];
 }
 
 $positions = [];
@@ -154,61 +214,85 @@ function cmp($a, $b)
     return ($a->bonus > $b->bonus) ? -1 : 1;
 }
 
+function cmp3($a, $b)
+{
+    if ($a->bonus == $b->bonus) {
+        return 0;
+    }
+    return ($a->bonus < $b->bonus) ? -1 : 1;
+}
+
+function cmp2($a, $b)
+{
+    if (count($a->skills) == count($b->skills)) {
+        return 0;
+    }
+    return (count($a->skills) < count($b->skills)) ? -1 : 1;
+}
+
 usort($managers, "cmp");
+
+asort($companies);
+$worstPopularCompany = array_key_first($companies);
 
 $output = [];
 
+$posizionato = 0;
+
+function ciclaPiuVeloce($rowId, &$columnId)
+{
+    global $office;
+
+    if ($office[$rowId][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId][$columnId + 2] == '#' && $office[$rowId][$columnId + 3] == '#' && $office[$rowId][$columnId + 4] == '#') {
+        $columnId =+ 5;
+        return true;
+    } elseif ($office[$rowId][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId][$columnId + 2] == '#' && $office[$rowId][$columnId + 3] == '#') {
+        $columnId =+ 4;
+        return true;
+    } elseif ($office[$rowId][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId][$columnId + 2] == '#') {
+        $columnId =+ 3;
+        return true;
+    }
+    return false;
+}
+
 for ($rowId = 0; $rowId < $height; $rowId++) {
     for ($columnId = 0; $columnId < $width; $columnId++) {
+        //if ($filename == 'e' && ciclaPiuVeloce($rowId, $columnId)) continue;
+
         if ($office[$rowId][$columnId] == '#' || is_object($office[$rowId][$columnId])) continue;
         else if ($office[$rowId][$columnId] == '_') {
             Log::out("Posizionando Developer in [$rowId][$columnId]", 0);
             // Developer position
             $bestDeveloper = getBestDeveloperHere($rowId, $columnId);
-            if($bestDeveloper) {
-                // tolgo dai dipendenti diponibili quello che ho appena messo a lavorare
-                unset($employees[$bestDeveloper->id]);
-
-                $bestDeveloper->coordinates = [$columnId, $rowId];
-
-                $dipendentiTotali[$bestDeveloper->id] = $bestDeveloper;
-
-                //posiziono il developer
-                Log::out("Posizionato Developer ID = $bestDeveloper->id", 0);
-                $positions[$bestDeveloper->id] = [$rowId, $columnId];
+            if ($bestDeveloper) {
+                $posizionato++;
+                $employees[$bestDeveloper->id]->coordinates = [$rowId, $columnId];
                 $office[$rowId][$columnId] = $bestDeveloper;
-            }
-            else Log::out("Nessun Developer trovato disponibile " . count($employees), 0);
+            } else Log::out("Nessun Developer trovato disponibile " . count($employees), 0);
 
         } else if ($office[$rowId][$columnId] == 'M') {
             //Manager position
             Log::out("Posizionando Manager in [$rowId][$columnId]", 0);
             $bestManager = getBestManagerHere($rowId, $columnId);
-            if($bestManager) {
-                unset($employees[$bestManager->id]);
+            if ($bestManager) {
+                $posizionato++;
                 Log::out("Posizionato Manager ID = $bestManager->id", 0);
-
-                $positions[$bestManager->id] = [$rowId, $columnId];
+                $employees[$bestManager->id]->coordinates = [$rowId, $columnId];
+                $managers[$bestManager->id]->coordinates = [$rowId, $columnId];
                 $office[$rowId][$columnId] = $bestManager;
-
-                $bestManager->coordinates = [$columnId, $rowId];
-
-                $dipendentiTotali[$bestManager->id] = $bestManager;
-            }
-            else  Log::out("Nessun Manager trovato disponibile " . count($managers), 0);
+            } else  Log::out("Nessun Manager trovato disponibile " . count($managers), 0);
         }
     }
 }
 
 $output = [];
 
-$lastKey = max(array_keys($positions));
-for($i = 0; $i < $lastKey; $i++)
-{
-    if(!empty($positions[$i])) {
-        $output[] = $positions[$i][1] . ' ' . $positions[$i][0];
-    }
-    else $output[] = 'X';
+/** @var Employee $dipendente */
+foreach ($employees as $dipendente) {
+    if (!empty($dipendente->coordinates)) {
+        $output[] = $dipendente->coordinates[1] . ' ' . $dipendente->coordinates[0];
+    } else $output[] = 'X';
 }
 
 
