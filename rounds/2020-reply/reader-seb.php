@@ -79,6 +79,7 @@ for ($i = 0; $i < $numProjManager; $i++) {
     $managerProps = explode(' ', $content[$startingFrom + $i]);
     $employees[$counter] = new Employee('M', $counter, $managerProps[0], $managerProps[1], []);
     $managers[$counter] = new Employee('M', $counter, $managerProps[0], $managerProps[1], []);
+    $companies[$managerProps[0]] += 1;
     $counter++;
 }
 

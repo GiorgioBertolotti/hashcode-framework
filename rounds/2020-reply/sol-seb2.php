@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 
 require_once '../../bootstrap.php';
 
-$fileName = 'a';
+$fileName = 'e';
 
 include 'reader-seb.php';
 
@@ -84,10 +84,11 @@ function getBestDeveloperHere($rowId, $columnId)
             }
         }
 
+        /*
         if ($office[$rowId + 1][$columnId] == '_') {
             return getBestEmployeBySkills($bestDeveloper);
         }
-
+        */
         return $bestDeveloper;
     } else {
         $topEmploye = $office[$rowId][$columnId - 1];
@@ -203,7 +204,7 @@ function cmp2($a, $b)
 usort($managers, "cmp");
 
 asort($companies);
-$worstPopularCompany = array_key_first($companies);
+$worstPopularCompany = array_keys($companies)[0];
 
 $output = [];
 
@@ -226,9 +227,36 @@ function ciclaPiuVeloce($rowId, &$columnId)
     return false;
 }
 
+function posizionaQui($rowId, $columnId, $descrizione)
+{
+    global $office, $employees, $posizionato, $managers;
+    // Posiziono quello a Destra
+    if(in_array($office[$rowId][$columnId], ['_', 'M'])) {
+        if($office[$rowId][$columnId] == '_') {
+            Log::out("Posizionando Developer a {$descrizione}  in [$rowId][" . $columnId . "]", 0);
+            // Developer position
+            $bestDeveloperDestra = getBestDeveloperHere($rowId, $columnId);
+            $posizionato++;
+            $employees[$bestDeveloperDestra->id]->coordinates = [$rowId, $columnId];
+            $office[$rowId][$columnId] = $bestDeveloperDestra;
+        }
+        else {
+            $bestManager = getBestManagerHere($rowId, $columnId);
+            if ($bestManager) {
+                $posizionato++;
+                Log::out("Posizionato Manager a {$descrizione} ID = $bestManager->id", 0);
+                $employees[$bestManager->id]->coordinates = [$rowId, $columnId];
+                $managers[$bestManager->id]->coordinates = [$rowId, $columnId];
+                $office[$rowId][$columnId] = $bestManager;
+            } else  Log::out("Nessun Manager trovato disponibile " . count($managers), 0);
+        }
+    }
+}
+
+$ultimoPosizionato = null;
 for ($rowId = 0; $rowId < $height; $rowId++) {
     for ($columnId = 0; $columnId < $width; $columnId++) {
-        //if ($filename == 'e' && ciclaPiuVeloce($rowId, $columnId)) continue;
+        //if (ciclaPiuVeloce($rowId, $columnId)) continue;
 
         if ($office[$rowId][$columnId] == '#' || is_object($office[$rowId][$columnId])) continue;
         else if ($office[$rowId][$columnId] == '_') {
@@ -241,6 +269,7 @@ for ($rowId = 0; $rowId < $height; $rowId++) {
                 $office[$rowId][$columnId] = $bestDeveloper;
             } else Log::out("Nessun Developer trovato disponibile " . count($employees), 0);
 
+            // $ultimoPosizionato = $bestDeveloper;
         } else if ($office[$rowId][$columnId] == 'M') {
             //Manager position
             Log::out("Posizionando Manager in [$rowId][$columnId]", 0);
@@ -252,7 +281,20 @@ for ($rowId = 0; $rowId < $height; $rowId++) {
                 $managers[$bestManager->id]->coordinates = [$rowId, $columnId];
                 $office[$rowId][$columnId] = $bestManager;
             } else  Log::out("Nessun Manager trovato disponibile " . count($managers), 0);
+
         }
+
+
+        // Posiziono quello a Destra
+        posizionaQui($rowId, $columnId + 1, 'destra');
+
+        // Posiziono quello in basso
+        posizionaQui($rowId + 1, $columnId, 'basso');
+        // Posiziono quello in alto
+        posizionaQui($rowId - 1, $columnId, 'alto');
+
+        // Posiziono quello a sinistra
+        posizionaQui($rowId, $columnId - 1, 'sinistra');
     }
 }
 
