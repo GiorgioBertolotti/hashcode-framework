@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 
 require_once '../../bootstrap.php';
 
-$fileName = 'a';
+$fileName = 'b';
 
 include 'reader-seb.php';
 

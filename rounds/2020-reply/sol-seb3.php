@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 
 require_once '../../bootstrap.php';
 
-$fileName = 'f';
+$fileName = 'b';
 
 include 'reader-seb.php';
 
@@ -18,26 +18,24 @@ include 'reader-seb.php';
  */
 function getBestEmployeBySkills($employeStart)
 {
-    global $developers;
+    global $employees, $developers;
 
     if (is_object($employeStart)) {
         $bestScore = 0;
         $bestEmployeeByTop = null;
         foreach ($developers as $employee) {
             /** @var Employee $employee */
-            if (empty($employee->coordinates)) {
-                if ($employee->company == $employeStart->company) {
+            if (empty($employees[$employee->id]->coordinates)) {
+                if($employee->company == $employeStart->company)
                     $localScore = $employee->bonus * $employeStart->bonus;
-                } else $localScore = 0;
+                else $localScore = 0;
 
                 $skillsComuni = count(array_intersect($employee->skills, $employeStart->skills));
                 $skillsDiverse = max(count($employee->skills), count($employeStart->skills)) - $skillsComuni;
-
                 /*if ($skillsComuni == count($employeStart->skills) && count($employee->skills) == count($employeStart->skills)) {
                     //le skills di entrambi i dipendenti sono identifici score = 0
                     continue;
-                } else */
-                if ($bestScore == 0 || $bestScore < ($skillsComuni * $skillsDiverse + $localScore)) {
+                } else */if ($bestScore == 0 || $bestScore < ($skillsComuni * $skillsDiverse + $localScore)) {
                     $bestScore = ($skillsComuni * $skillsDiverse) + $localScore;
                     $bestEmployeeByTop = $employee;
                 }
@@ -45,16 +43,13 @@ function getBestEmployeBySkills($employeStart)
         }
 
         return ['employee' => $bestEmployeeByTop, 'localScore' => $bestScore];
-    } else return ['localScore' => 0];
+    } else
+        return ['localScore' => 0];
 }
-
 
 function getBestDeveloperHere($rowId, $columnId)
 {
     global $employees, $office, $developers, $mostPopularCompany, $worstPopularCompany;
-
-    // era cmp2
-    usort($developers, "cmp");
 
     $topEmploye = $office[$rowId][$columnId - 1];
     $bestEmployeByTop = getBestEmployeBySkills($topEmploye);
@@ -87,7 +82,7 @@ function getBestDeveloperHere($rowId, $columnId)
 
         if (is_null($returnDeveloper)) {
             foreach ($developers as $developer) {
-                if (empty($employees[$developer->id]->coordinates) && $developer->company == $worstPopularCompany) {
+                if (empty($developer->coordinates) && $developer->company == $worstPopularCompany) {
                     $returnDeveloper = $developer;
                     break;
                 }
@@ -96,7 +91,7 @@ function getBestDeveloperHere($rowId, $columnId)
 
         if (is_null($returnDeveloper)) {
             foreach ($developers as $developer) {
-                if (empty($employees[$developer->id]->coordinates) && $developer->company == $worstPopularCompany) {
+                if (empty($developer->coordinates) && $developer->company == $worstPopularCompany) {
                     $returnDeveloper = $developer;
                     break;
                 }
@@ -109,7 +104,7 @@ function getBestDeveloperHere($rowId, $columnId)
 
 function getBestManagerHere($rowId, $columnId)
 {
-    global $managers, $office, $mostPopularCompany;
+    global $managers, $office, $mostPopularCompany, $employees;
 
     $topEmploye = $office[$rowId - 1][$columnId];
     $rightEmploye = $office[$rowId][$columnId + 1];
@@ -153,17 +148,26 @@ function getBestManagerHere($rowId, $columnId)
 
 function getWorstManager()
 {
-    global $managers, $worstPopularCompany;
+    global $managers, $worstPopularCompany, $employees;
 
     $managers2 = $managers;
-    usort($managers2, "cmp3");
+    $keys = array_keys($managers2);
+    array_multisort(
+        array_column($managers2, 'bonus'), SORT_DESC, SORT_NUMERIC, $managers2, $keys
+    );
+    $managers2 = array_combine($keys, $managers2);
+
     foreach ($managers2 as $manager) {
         if (!empty($manager->coordinates)) continue;
+
         if ($manager->company == $worstPopularCompany)
             return $manager;
     }
 
-    return array_values($managers2)[0];
+    foreach($managers2 as $manager) {
+        if (!empty($manager->coordinates)) continue;
+        return $manager;
+    }
 }
 
 $positions = [];
@@ -201,7 +205,6 @@ function cmp2($a, $b)
 }
 
 
-usort($managers, "cmp");
 krsort($companies);
 $mostPopularCompany = array_keys($companies)[0];
 
@@ -310,7 +313,19 @@ for ($rowId = 0; $rowId < $height; $rowId++) {
     }
 }
 
-uasort($importanze);
+array_multisort($importanze, SORT_DESC, array_keys($importanze));
+
+$keys = array_keys($developers);
+array_multisort(
+    array_column($developers, 'bonus'), SORT_DESC, SORT_NUMERIC, $developers, $keys
+);
+$developers = array_combine($keys, $developers);
+
+$keys = array_keys($managers);
+array_multisort(
+    array_column($managers, 'bonus'), SORT_DESC, SORT_NUMERIC, $managers, $keys
+);
+$managers = array_combine($keys, $managers);
 
 foreach ($importanze as $coordinates => $importanza) {
     if ($importanza == 0) continue;
@@ -328,7 +343,7 @@ foreach ($importanze as $coordinates => $importanza) {
         $bestDeveloper = getBestDeveloperHere($rowId, $columnId);
         if ($bestDeveloper) {
             $posizionato++;
-            $developers[$bestDeveloper->id]->coordinates = [$rowId, $columnId];
+            //$developers[$bestDeveloper->id]->coordinates = [$rowId, $columnId];
             $employees[$bestDeveloper->id]->coordinates = [$rowId, $columnId];
             $office[$rowId][$columnId] = $bestDeveloper;
         } else Log::out("Nessun Developer trovato disponibile " . count($employees), 0);
@@ -355,7 +370,7 @@ foreach ($importanze as $coordinates => $importanza) {
             $posizionato++;
             Log::out("Posizionato Manager ID = $bestManager->id", 0);
             $employees[$bestManager->id]->coordinates = [$rowId, $columnId];
-            $managers[$bestManager->id]->coordinates = [$rowId, $columnId];
+            //$managers[$bestManager->id]->coordinates = [$rowId, $columnId];
             $office[$rowId][$columnId] = $bestManager;
         } else  Log::out("Nessun Manager trovato disponibile " . count($managers), 0);
 

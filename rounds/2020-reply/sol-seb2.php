@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 
 require_once '../../bootstrap.php';
 
-$fileName = 'e';
+$fileName = 'b';
 
 include 'reader-seb.php';
 
@@ -26,7 +26,7 @@ function getBestEmployeBySkills($employeStart)
         foreach ($employees as $employee) {
             /** @var Employee $employee */
             if ($employee->type == 'D' && empty($employee->coordinates)) {
-                if($employee->company == $employeStart->company)
+                if ($employee->company == $employeStart->company)
                     $localScore = $employee->bonus * $employeStart->bonus;
                 else $localScore = 0;
 
@@ -35,7 +35,8 @@ function getBestEmployeBySkills($employeStart)
                 /*if ($skillsComuni == count($employeStart->skills) && count($employee->skills) == count($employeStart->skills)) {
                     //le skills di entrambi i dipendenti sono identifici score = 0
                     continue;
-                } else */if ($bestScore == 0 || $bestScore < ($skillsComuni * $skillsDiverse + $localScore)) {
+                } else */
+                if ($bestScore == 0 || $bestScore < ($skillsComuni * $skillsDiverse + $localScore)) {
                     $bestScore = ($skillsComuni * $skillsDiverse) + $localScore;
                     $bestEmployeeByTop = $employee;
                 }
@@ -53,13 +54,13 @@ function getBestDeveloperHere($rowId, $columnId)
     global $employees, $office, $posizionato, $developers, $worstPopularCompany;
 
 
-    if($office[$rowId][$columnId - 1] == '#' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == '#') {
+    if ($office[$rowId][$columnId - 1] == '#' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == '#') {
         // getWorstDeveloper()
 
         $developers2 = $developers;
         usort($developers2, "cmp2");
-        foreach($developers2 as $developer) {
-            if($developer->company == $worstPopularCompany) {
+        foreach ($developers2 as $developer) {
+            if ($developer->company == $worstPopularCompany) {
                 return $developer;
             }
         }
@@ -75,10 +76,12 @@ function getBestDeveloperHere($rowId, $columnId)
          * trovo il developer piu merda di tutti ovvero quello con meno skills (forse con azienda meno popolare? tra tutti)
          */
 
+        $developers2 = $developers;
+        usort($developers2, "cmp3");
 
         $bestDeveloper = null;
-        foreach ($employees as $employee) {
-            if ($employee->type = 'D' && empty($employee->coordinates)) {
+        foreach ($developers2 as $employee) {
+            if (empty($employees[$employee->id]->coordinates)) {
                 $bestDeveloper = $employee;
                 break;
             }
@@ -111,8 +114,19 @@ function getBestDeveloperHere($rowId, $columnId)
         if ($bestEmployeByBottom['localScore'] && $bestEmployeByBottom['localScore'] == $bestScore) return $bestEmployeByBottom['employee'];
         if ($bestEmployeByLeft['localScore'] && $bestEmployeByLeft['localScore'] == $bestScore) return $bestEmployeByLeft['employee'];
         else {
+            /*
             foreach ($employees as $employee) {
                 if ($employee->type == 'D' && empty($employee->coordinates)) {
+                    return $employee;
+                }
+            }*/
+
+            $developers2 = $developers;
+            usort($developers2, "cmp3");
+
+            $bestDeveloper = null;
+            foreach ($developers2 as $employee) {
+                if (empty($employees[$employee->id]->coordinates)) {
                     return $employee;
                 }
             }
@@ -161,14 +175,13 @@ function getBestManagerHere($rowId, $columnId)
 
 }
 
-function getWorstManager() {
+function getWorstManager()
+{
     global $managers, $worstPopularCompany;
 
-    $managers2 = $managers;
-    usort($managers2, "cmp3");
-    foreach($managers2 as $manager) {
-        if(!empty($manager->coordinates)) continue;
-        if($manager->company == $worstPopularCompany)
+    foreach ($managers as $manager) {
+        if (!empty($manager->coordinates)) continue;
+        if ($manager->company == $worstPopularCompany)
             return $manager;
     }
 
@@ -201,7 +214,6 @@ function cmp2($a, $b)
     return (count($a->skills) < count($b->skills)) ? -1 : 1;
 }
 
-usort($managers, "cmp");
 
 asort($companies);
 $worstPopularCompany = array_keys($companies)[0];
@@ -215,13 +227,13 @@ function ciclaPiuVeloce($rowId, &$columnId)
     global $office;
 
     if ($office[$rowId][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId][$columnId + 2] == '#' && $office[$rowId][$columnId + 3] == '#' && $office[$rowId][$columnId + 4] == '#') {
-        $columnId =+ 5;
+        $columnId = +5;
         return true;
     } elseif ($office[$rowId][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId][$columnId + 2] == '#' && $office[$rowId][$columnId + 3] == '#') {
-        $columnId =+ 4;
+        $columnId = +4;
         return true;
     } elseif ($office[$rowId][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId][$columnId + 2] == '#') {
-        $columnId =+ 3;
+        $columnId = +3;
         return true;
     }
     return false;
@@ -231,16 +243,15 @@ function posizionaQui($rowId, $columnId, $descrizione)
 {
     global $office, $employees, $posizionato, $managers;
     // Posiziono quello a Destra
-    if(in_array($office[$rowId][$columnId], ['_', 'M'])) {
-        if($office[$rowId][$columnId] == '_') {
+    if (in_array($office[$rowId][$columnId], ['_', 'M'])) {
+        if ($office[$rowId][$columnId] == '_') {
             Log::out("Posizionando Developer a {$descrizione}  in [$rowId][" . $columnId . "]", 0);
             // Developer position
             $bestDeveloperDestra = getBestDeveloperHere($rowId, $columnId);
             $posizionato++;
             $employees[$bestDeveloperDestra->id]->coordinates = [$rowId, $columnId];
             $office[$rowId][$columnId] = $bestDeveloperDestra;
-        }
-        else {
+        } else {
             $bestManager = getBestManagerHere($rowId, $columnId);
             if ($bestManager) {
                 $posizionato++;
@@ -254,6 +265,8 @@ function posizionaQui($rowId, $columnId, $descrizione)
 }
 
 $ultimoPosizionato = null;
+
+/*
 for ($rowId = 0; $rowId < $height; $rowId++) {
     for ($columnId = 0; $columnId < $width; $columnId++) {
         //if (ciclaPiuVeloce($rowId, $columnId)) continue;
@@ -297,6 +310,147 @@ for ($rowId = 0; $rowId < $height; $rowId++) {
         posizionaQui($rowId, $columnId - 1, 'sinistra');
     }
 }
+*/
+
+// ROBA NUOVA TEST TESR
+
+
+$importanze = [];
+
+$puntiMassimi = 10;
+
+// punti cella developer = 2
+// punti cella manager = 1
+// punti cella # = 0
+
+// Heating importanza inserimento delle celle
+for ($rowId = 0; $rowId < $height; $rowId++) {
+    for ($columnId = 0; $columnId < $width; $columnId++) {
+        $puntiCella = $puntiMassimi;
+
+        $cellaAttuale = $office[$rowId][$columnId];
+
+        $cellaSopra = $office[$rowId - 1][$columnId];
+        $cellaDestra = $office[$rowId][$columnId + 1];
+        $cellaSotto = $office[$rowId + 1][$columnId];
+        $cellaSinistra = $office[$rowId][$columnId - 1];
+
+        if ($cellaSopra == '#' || is_null($cellaSopra)) {
+            $puntiCella -= 2;
+        } else if ($cellaSopra == 'M') {
+            $puntiCella -= 1;
+        }
+
+        if ($cellaDestra == '#' || is_null($cellaDestra)) {
+            $puntiCella -= 2;
+        } else if ($cellaDestra == 'M') {
+            $puntiCella -= 1;
+        }
+
+        if ($cellaSotto == '#' || is_null($cellaSotto)) {
+            $puntiCella -= 2;
+        } else if ($cellaSotto == 'M') {
+            $puntiCella -= 1;
+        }
+
+        if ($cellaSinistra == '#' || is_null($cellaSinistra)) {
+            $puntiCella -= 2;
+        } else if ($cellaSinistra == 'M') {
+            $puntiCella -= 1;
+        }
+
+        if ($cellaAttuale == '#' || is_null($cellaAttuale)) {
+            $puntiCella = 0;
+        } else if ($cellaAttuale == 'M') {
+            $puntiCella -= 1;
+        }
+
+        $importanze[$rowId . '-' . $columnId] = $puntiCella;
+
+    }
+}
+
+array_multisort($importanze, SORT_DESC, array_keys($importanze));
+
+// ordinare mantentendo le chiavi in $developers e $managers che si spacca per quello
+
+$keys = array_keys($developers);
+array_multisort(
+    array_column($developers, 'bonus'), SORT_DESC, SORT_NUMERIC, $developers, $keys
+);
+$developers = array_combine($keys, $developers);
+
+$keys = array_keys($managers);
+array_multisort(
+    array_column($managers, 'bonus'), SORT_DESC, SORT_NUMERIC, $managers, $keys
+);
+$managers = array_combine($keys, $managers);
+
+
+
+foreach ($importanze as $coordinates => $importanza) {
+    if ($importanza == 0) continue;
+
+    list($rowId, $columnId) = explode('-', $coordinates);
+
+    $rowId = (int)$rowId;
+    $columnId = (int)$columnId;
+
+    if ($office[$rowId][$columnId] == '#' || is_object($office[$rowId][$columnId])) continue;
+
+    if ($office[$rowId][$columnId] == '_') {
+        Log::out("Posizionando Developer in [$rowId][$columnId]", 0);
+        // Developer position
+        $bestDeveloper = getBestDeveloperHere($rowId, $columnId);
+        if ($bestDeveloper) {
+            $posizionato++;
+            //$developers[$bestDeveloper->id]->coordinates = [$rowId, $columnId];
+            $employees[$bestDeveloper->id]->coordinates = [$rowId, $columnId];
+            $office[$rowId][$columnId] = $bestDeveloper;
+        } else Log::out("Nessun Developer trovato disponibile " . count($employees), 0);
+
+
+        // Posiziono quello a Destra
+        posizionaQui($rowId, $columnId + 1, 'destra');
+
+        // Posiziono quello in basso
+        posizionaQui($rowId + 1, $columnId, 'basso');
+        // Posiziono quello in alto
+        posizionaQui($rowId - 1, $columnId, 'alto');
+
+        // Posiziono quello a sinistra
+        posizionaQui($rowId, $columnId - 1, 'sinistra');
+
+
+        // $ultimoPosizionato = $bestDeveloper;
+    } else if ($office[$rowId][$columnId] == 'M') {
+        //Manager position
+        Log::out("Posizionando Manager in [$rowId][$columnId]", 0);
+        $bestManager = getBestManagerHere($rowId, $columnId);
+        if ($bestManager) {
+            $posizionato++;
+            Log::out("Posizionato Manager ID = $bestManager->id", 0);
+            $employees[$bestManager->id]->coordinates = [$rowId, $columnId];
+            //$managers[$bestManager->id]->coordinates = [$rowId, $columnId];
+            $office[$rowId][$columnId] = $bestManager;
+        } else  Log::out("Nessun Manager trovato disponibile " . count($managers), 0);
+
+        // Posiziono quello a Destra
+        posizionaQui($rowId, $columnId + 1, 'destra');
+
+        // Posiziono quello in basso
+        posizionaQui($rowId + 1, $columnId, 'basso');
+        // Posiziono quello in alto
+        posizionaQui($rowId - 1, $columnId, 'alto');
+
+        // Posiziono quello a sinistra
+        posizionaQui($rowId, $columnId - 1, 'sinistra');
+
+    }
+}
+
+
+// FINE TEST TEST
 
 $output = [];
 
