@@ -313,20 +313,24 @@ for ($rowId = 0; $rowId < $height; $rowId++) {
     }
 }
 
+// Ordino le celle per importanza punti desc
 array_multisort($importanze, SORT_DESC, array_keys($importanze));
 
+// Ordino i $developers per bonus desc
 $keys = array_keys($developers);
 array_multisort(
     array_column($developers, 'bonus'), SORT_DESC, SORT_NUMERIC, $developers, $keys
 );
 $developers = array_combine($keys, $developers);
 
+// Ordino i Managers per bonus desc
 $keys = array_keys($managers);
 array_multisort(
     array_column($managers, 'bonus'), SORT_DESC, SORT_NUMERIC, $managers, $keys
 );
 $managers = array_combine($keys, $managers);
 
+// Partendo dalle celle con più importanza vado a posizionare
 foreach ($importanze as $coordinates => $importanza) {
     if ($importanza == 0) continue;
 
