@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 
 require_once '../../bootstrap.php';
 
-$fileName = 'b';
+$fileName = 'e';
 
 include 'reader-seb.php';
 
@@ -196,7 +196,12 @@ function getWorstManager() {
     global $managers, $worstPopularCompany;
 
     $managers2 = $managers;
-    usort($managers2, "cmp3");
+    $keys = array_keys($managers2);
+    array_multisort(
+        array_column($managers2, 'bonus'), SORT_ASC, SORT_NUMERIC, $managers2, $keys
+    );
+    $managers2 = array_combine($keys, $managers2);
+
     foreach($managers2 as $manager) {
         if(!empty($manager->coordinates)) continue;
         if($manager->company == $worstPopularCompany)
@@ -232,10 +237,25 @@ function cmp2($a, $b)
     return (count($a->skills) < count($b->skills)) ? -1 : 1;
 }
 
-usort($managers, "cmp");
+$descCompanies = $companies;
+array_multisort($descCompanies, SORT_DESC, array_keys($descCompanies));
+$mostPopularCompany = array_keys($descCompanies)[0];
 
-asort($companies);
-$worstPopularCompany = array_key_first($companies);
+$ascCompanies = $companies;
+array_multisort($ascCompanies, SORT_ASC, array_keys($descCompanies), 'bonus');
+$worstPopularCompany = array_keys($ascCompanies)[0];
+
+$keys = array_keys($developers);
+array_multisort(array_column($developers, 'bonus'), SORT_DESC, SORT_NUMERIC, $developers, $keys);
+$developers = array_combine($keys, $developers);
+
+// Ordino i Managers per bonus desc
+$keys = array_keys($managers);
+array_multisort(
+    array_column($managers, 'bonus'), SORT_DESC, SORT_NUMERIC, $managers, $keys
+);
+$managers = array_combine($keys, $managers);
+
 
 $output = [];
 

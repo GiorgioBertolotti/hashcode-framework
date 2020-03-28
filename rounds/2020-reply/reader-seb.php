@@ -29,7 +29,7 @@ class Employee
     }
 }
 
-function calculateBonus($replayer1, $replayer2)
+function calculateScore($replayer1, $replayer2)
 {
     $bonus = ($replayer1->company == $replayer2->company) ? $replayer1->bonus * $replayer2->bonus : 0;
     if (get_class($replayer1) == "Developer" && get_class($replayer2) == "Developer") {
@@ -80,6 +80,8 @@ for ($i = 0; $i < $numProjManager; $i++) {
     $employees[$counter] = new Employee('M', $counter, $managerProps[0], $managerProps[1], []);
     $managers[$counter] = new Employee('M', $counter, $managerProps[0], $managerProps[1], []);
     $companies[$managerProps[0]] += 1;
+    //$companies[$managerProps[0]]['counter'] += 1;
+    //$companies[$managerProps[0]]['bonus'] += $devProps[1];
     $counter++;
 }
 

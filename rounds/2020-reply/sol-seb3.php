@@ -1,6 +1,29 @@
 <?php
 
 use Utils\Log;
+use Utils\Stopwatch;
+/*
+$previsionScore = [];
+Stopwatch::tik('previsioni start');
+foreach($descCompanies as $companyName => $dipNumber) {
+    foreach($developers as $developer1) {
+        if($developer1->company == $companyName) {
+            foreach ($developers as $developer2) {
+                if($developer1->id != $developer2->id && $developer2->company == $companyName) {
+                    if($developer1->bonus > $developer2->bonus)
+                        $key = "{$developer1->id}_{$developer2->id}";
+                    else $key = "{$developer2->id}_{$developer1->id}";
+                    $previstionScore[$companyName][$key] = calculateScore($developer1, $developer2);
+                }
+            }
+        }
+    }
+}
+Stopwatch::tok('previsioni end');
+Stopwatch::print();
+die();
+*/
+
 
 error_reporting(E_ALL);
 
@@ -104,7 +127,7 @@ function getBestDeveloperHere($rowId, $columnId)
 
 function getBestManagerHere($rowId, $columnId)
 {
-    global $managers, $office, $mostPopularCompany, $employees;
+    global $managers, $office, $mostPopularCompany, $previsionScore;
 
     $topEmploye = $office[$rowId - 1][$columnId];
     $rightEmploye = $office[$rowId][$columnId + 1];
@@ -129,7 +152,7 @@ function getBestManagerHere($rowId, $columnId)
     foreach ($managers as $manager) {
         if (!empty($manager->coordinates)) continue;
 
-        if ($mostPopularCompanyHere) {
+        if ($mostPopularCompanyHere && $previsionScore[$mostPopularCompanyHere]) {
             if ($manager->company == $mostPopularCompanyHere) {
                 $bestManager = $manager;
                 break;
@@ -137,8 +160,14 @@ function getBestManagerHere($rowId, $columnId)
         } else {
             // SUPER MIGLIORAMENTO prendere in questo caso il peggior manager con l'azienda piu scrausa e il bonus minore di tutti
             // ora viene preso il primo porca troia
-            $bestManager = getWorstManager();
+            $bestManager = $manager;
             break;
+        }
+    }
+
+    if(!$bestManager) {
+        foreach($managers as $manager) {
+            if(!$manager->coordinates) return $manager;
         }
     }
 
@@ -204,37 +233,55 @@ function cmp2($a, $b)
     return ((count($a->skills) * $a->bonus) > (count($b->skills) * $b->bonus)) ? -1 : 1;
 }
 
+$descCompanies = $companies;
+array_multisort($descCompanies, SORT_DESC, array_keys($descCompanies));
+$mostPopularCompany = array_keys($descCompanies)[0];
 
-krsort($companies);
-$mostPopularCompany = array_keys($companies)[0];
+$ascCompanies = $companies;
+array_multisort($ascCompanies, SORT_ASC, array_keys($descCompanies), 'bonus');
+$worstPopularCompany = array_keys($ascCompanies)[0];
 
-asort($companies);
-$worstPopularCompany = array_keys($companies)[0];
+$previsionScore = [];
+foreach($descCompanies as $companyName => $dipNumber) {
+    //echo 'lavoro su company : ' . $companyName . PHP_EOL;
+    $lastDevloperId = $lastDeveloperBonus = 0;
+    foreach($developers as $developer1) {
+        if($developer1->company == $companyName) {
+            $lastDevloperId = $developer1->id;
+            $lastDeveloperBonus = $developer1->bonus;
+            foreach ($developers as $developer2) {
+                if($developer1->id != $developer2->id && $developer2->company == $companyName) {
+                    if($developer1->bonus > $developer2->bonus)
+                        $key = "{$developer1->id}_{$developer2->id}";
+                    else $key = "{$developer2->id}_{$developer1->id}";
+                    $previsionScore[$companyName][$key] = calculateScore($developer1, $developer2);
+                }
+            }
+        }
+    }
+    if(!$previsionScore[$companyName] && $lastDevloperId) {
+        $previsionScore[$companyName][$lastDevloperId.'_ALONE'] = $lastDeveloperBonus;
+    }
+}
+
+
+foreach($previsionScore as $companyName => $value) {
+    array_multisort($previsionScore[$companyName], SORT_DESC, $value);
+}
+
+$keys = array_keys($managers);
+array_multisort(
+    array_column($managers, 'bonus'), SORT_DESC, SORT_NUMERIC, $managers, $keys
+);
+$managers = array_combine($keys, $managers);
 
 $output = [];
 
 $posizionato = 0;
 
-function ciclaPiuVeloce($rowId, &$columnId)
+function posizionaQui($rowId, $columnId, $descrizione)
 {
-    global $office;
-
-    if ($office[$rowId][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId][$columnId + 2] == '#' && $office[$rowId][$columnId + 3] == '#' && $office[$rowId][$columnId + 4] == '#') {
-        $columnId = +5;
-        return true;
-    } elseif ($office[$rowId][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId][$columnId + 2] == '#' && $office[$rowId][$columnId + 3] == '#') {
-        $columnId = +4;
-        return true;
-    } elseif ($office[$rowId][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId][$columnId + 2] == '#') {
-        $columnId = +3;
-        return true;
-    }
-    return false;
-}
-
-function posizionaQui($rowId, $columnId, $descrizione, &$office, &$developers, &$managers, &$employees)
-{
-    global $posizionato;
+    global $posizionato, $developers, $employees, $office, $managers;
     // Posiziono quello a Destra
     if (in_array($office[$rowId][$columnId], ['_', 'M'])) {
         if ($office[$rowId][$columnId] == '_') {
@@ -308,19 +355,130 @@ for ($rowId = 0; $rowId < $height; $rowId++) {
             $puntiCella -= 1;
         }
 
-        $importanze[$rowId . '-' . $columnId] = $puntiCella;
+        if($puntiCella > 0)
+            $importanze[$rowId . '-' . $columnId] = $puntiCella;
 
     }
 }
 
 // Ordino le celle per importanza punti desc
 array_multisort($importanze, SORT_DESC, array_keys($importanze));
+foreach($importanze as $coordinates => $punteggio) {
+    list($rowId, $columnId) = explode('-', $coordinates);
 
-// Ordino i $developers per bonus desc
+    $rowId = (int)$rowId;
+    $columnId = (int)$columnId;
+
+    if ($office[$rowId][$columnId] == '#' || is_object($office[$rowId][$columnId])) continue;
+
+    if ($office[$rowId][$columnId] == '_') {
+        foreach($previsionScore as $companyName => $puntiPrevisti) {
+            echo "Posiziono in {[$rowId][$columnId]}" . PHP_EOL;
+            if(!$puntiPrevisti) {
+                $topEmploye = $office[$rowId - 1][$columnId];
+                $rightEmploye = $office[$rowId][$columnId + 1];
+                $bottomEmploye = $office[$rowId + 1][$columnId];
+                $leftEmployee = $office[$rowId][$columnId - 1];
+
+                $arrayCompanies = [
+                    is_object($topEmploye) ? $topEmploye->company : null,
+                    is_object($rightEmploye) ? $rightEmploye->company : null,
+                    is_object($bottomEmploye) ? $bottomEmploye->company : null,
+                    is_object($leftEmployee) ? $leftEmployee->company : null
+                ];
+
+                $companies = array_count_values($arrayCompanies);
+                arsort($companies);
+                $mostPopularCompanyHere = array_slice(array_keys($companies), 0, 1, true)[0];
+
+                if($mostPopularCompanyHere && $previsionScore[$mostPopularCompanyHere]) {
+                    $puntiPrevisti = $previsionScore[$mostPopularCompanyHere];
+                }
+            }
+
+            $primoValore = array_keys($puntiPrevisti)[0];
+            $giaPosizionato = false;
+            list($developerToPlotId, $secondDeveloperToPlotId) = explode('_', $primoValore);
+            if(!empty($employees[$developerToPlotId]->coordinates)) {
+                $developerToPlotId = $secondDeveloperToPlotId;
+                $giaPosizionato = true;
+            }
+            $employees[$developerToPlotId]->coordinates = [$rowId, $columnId];
+            unset($previsionScore[$companyName][$primoValore]);
+            $office[$rowId][$columnId] = $employees[$developerToPlotId];
+
+            $topEmploye = $office[$rowId - 1][$columnId];
+            $rightEmploye = $office[$rowId][$columnId + 1];
+            $bottomEmploye = $office[$rowId + 1][$columnId];
+            $leftEmployee = $office[$rowId][$columnId - 1];
+/*
+            $topImportanza = $importanze[$rowId - 1 . '_' . $columnId];
+            $rightImportanza = $importanze[$rowId . '_' . $columnId + 1];
+            $bottomImportanza = $importanze[$rowId + 1 . '_' . $columnId];
+            $leftImportanza = $importanze[$rowId . '_' . $columnId - 1];
+
+            $importanzaMax = max([$topImportanza, $rightImportanza, $bottomImportanza, $leftImportanza]);
+*/
+            if($topEmploye == 'M') {
+                $bestManagerHere = getBestManagerHere($rowId - 1, $columnId);
+                if($bestManagerHere) {
+                    $office[$rowId - 1][$columnId] = $employees[$bestManagerHere->id];
+                    $employees[$bestManagerHere->id]->coordinates = [$rowId - 1, $columnId];
+                    $managers[$bestManagerHere->id]->coordinates = [$rowId - 1, $columnId];
+                    unset($importanze[$rowId - 1 . '_' . $columnId]);
+                }
+                else die('MORTO NON POSIZIONATO QUI 424');
+            }
+
+            if($rightEmploye == 'M') {
+                $bestManagerHere = getBestManagerHere($rowId, $columnId + 1);
+                if($bestManagerHere) {
+                    $office[$rowId][$columnId + 1] = $employees[$bestManagerHere->id];
+                    $employees[$bestManagerHere->id]->coordinates = [$rowId, $columnId + 1];
+                    $managers[$bestManagerHere->id]->coordinates = [$rowId, $columnId + 1];
+                    unset($importanze[$rowId . '_' . $columnId + 1]);
+                }
+                else die('MORTO NON POSIZIONATO QUI 435');
+            }
+            if($leftEmployee == 'M') {
+                $bestManagerHere = getBestManagerHere($rowId, $columnId - 1);
+                if($bestManagerHere) {
+                    $office[$rowId][$columnId - 1] = $employees[$bestManagerHere->id];
+                    $employees[$bestManagerHere->id]->coordinates = [$rowId, $columnId - 1];
+                    $managers[$bestManagerHere->id]->coordinates = [$rowId, $columnId - 1];
+                    unset($importanze[$rowId . '_' . $columnId -1]);
+                }
+                else die('MORTO NON POSIZIONATO QUI 445');
+            }
+            if($bottomEmploye == 'M') {
+                $bestManagerHere = getBestManagerHere($rowId + 1, $columnId);
+                if($bestManagerHere) {
+                    $office[$rowId + 1][$columnId] = $employees[$bestManagerHere->id];
+                    $employees[$bestManagerHere->id]->coordinates = [$rowId + 1, $columnId];
+                    $managers[$bestManagerHere->id]->coordinates = [$rowId + 1, $columnId];
+                    unset($importanze[$rowId + 1 . '_' . $columnId]);
+                }
+                else die('MORTO NON POSIZIONATO QUI 455');
+            }
+
+            break;
+        }
+    }
+    else if($office[$rowId][$columnId] == 'M') {
+        $bestManagerHere = getBestManagerHere($rowId, $columnId);
+        if($bestManagerHere) {
+            $office[$rowId][$columnId] = $employees[$bestManagerHere->id];
+            $employees[$bestManagerHere->id]->coordinates = [$rowId, $columnId];
+            $managers[$bestManagerHere->id]->coordinates = [$rowId, $columnId];
+        }
+        else die('MORTO NON POSIZIONATO QUI 468');
+    }
+}
+/*
+
+// Ordino i $developers per bonus desc e mantengo le chiavi array in quanto la chiave è l'id del developer
 $keys = array_keys($developers);
-array_multisort(
-    array_column($developers, 'bonus'), SORT_DESC, SORT_NUMERIC, $developers, $keys
-);
+array_multisort(array_column($developers, 'bonus'), SORT_DESC, SORT_NUMERIC, $developers, $keys);
 $developers = array_combine($keys, $developers);
 
 // Ordino i Managers per bonus desc
