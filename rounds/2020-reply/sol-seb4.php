@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 
 require_once '../../bootstrap.php';
 
-$fileName = 'e';
+$fileName = 'c';
 
 include 'reader-seb.php';
 
@@ -52,17 +52,88 @@ function getBestEmployeBySkills($employeStart)
 
 function getBestDeveloperHere($rowId, $columnId)
 {
-    global $employees, $office, $posizionato, $developers, $worstPopularCompany;
+    global $employees, $office, $posizionato, $developers, $worstPopularCompany, $filename;
 
 
     if($office[$rowId][$columnId - 1] == '#' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == '#') {
         // getWorstDeveloper()
 
         $developers2 = $developers;
-        usort($developers2, "cmp2");
+        $keys = array_keys($developers2);
+        array_multisort(
+            array_column($developers2, 'bonus'), SORT_ASC, SORT_NUMERIC, $developers2, $keys
+        );
+        $developers2 = array_combine($keys, $developers2);
+
         foreach($developers2 as $developer) {
             if($developer->company == $worstPopularCompany) {
                 return $developer;
+            }
+        }
+    }
+
+    if(!in_array($filename, ['b', 'c'])) {
+        //Solo un Manager a sinistra
+        if ($office[$rowId][$columnId - 1] == 'M' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == '#') {
+            $developers2 = $developers;
+            $keys = array_keys($developers2);
+            array_multisort(
+                array_column($developers2, 'bonus'), SORT_ASC, SORT_NUMERIC, $developers2, $keys
+            );
+            $developers2 = array_combine($keys, $developers2);
+
+            foreach ($developers2 as $developer) {
+                if ($developer->company == $worstPopularCompany) {
+                    return $developer;
+                }
+            }
+        }
+
+        //Solo un Manager a sopra
+        if ($office[$rowId][$columnId - 1] == '#' && $office[$rowId + 1][$columnId] == 'M' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == '#') {
+            $developers2 = $developers;
+            $keys = array_keys($developers2);
+            array_multisort(
+                array_column($developers2, 'bonus'), SORT_ASC, SORT_NUMERIC, $developers2, $keys
+            );
+            $developers2 = array_combine($keys, $developers2);
+
+            foreach ($developers2 as $developer) {
+                if ($developer->company == $worstPopularCompany) {
+                    return $developer;
+                }
+            }
+        }
+
+        //Solo un Manager a destra
+        if ($office[$rowId][$columnId - 1] == '#' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == 'M' && $office[$rowId - 1][$columnId] == '#') {
+            $developers2 = $developers;
+            $keys = array_keys($developers2);
+            array_multisort(
+                array_column($developers2, 'bonus'), SORT_ASC, SORT_NUMERIC, $developers2, $keys
+            );
+            $developers2 = array_combine($keys, $developers2);
+
+            foreach ($developers2 as $developer) {
+                if ($developer->company == $worstPopularCompany) {
+                    return $developer;
+                }
+            }
+        }
+
+        //Solo un manager sotto
+        if ($office[$rowId][$columnId - 1] == '#' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == 'M') {
+            $developers2 = $developers;
+            $keys = array_keys($developers2);
+            array_multisort(
+                array_column($developers2, 'bonus'), SORT_ASC, SORT_NUMERIC, $developers2, $keys
+            );
+            $developers2 = array_combine($keys, $developers2);
+
+            foreach ($developers2 as $developer) {
+                if ($developer->company == $worstPopularCompany) {
+                    return $developer;
+                }
             }
         }
     }
@@ -121,39 +192,96 @@ function getBestDeveloperHere($rowId, $columnId)
     }
 }
 
-function array_search_value($search_value, $array, $id_path)
+function getBestManagerHere($rowId, $columnId)
 {
+    global $managers, $office, $worstPopularCompany, $filename;
 
-    if (is_array($array) && count($array) > 0) {
+    // nuovo controllo ->
 
-        foreach ($array as $key => $value) {
+    if($office[$rowId][$columnId - 1] == '#' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == '#') {
+        // getWorstDeveloper()
 
-            $temp_path = $id_path;
+        $managers2 = $managers;
+        $keys = array_keys($managers2);
+        array_multisort(
+            array_column($managers2, 'bonus'), SORT_ASC, SORT_NUMERIC, $managers2, $keys
+        );
+        $managers2 = array_combine($keys, $managers2);
 
-            // Adding current key to search path
-            array_push($temp_path, $key);
-
-            // Check if this value is an array
-            // with atleast one element
-            if (is_array($value) && count($value) > 0) {
-                $res_path = array_search_id(
-                    $search_value, $value, $temp_path);
-
-                if ($res_path != null) {
-                    return $res_path;
-                }
-            } else if ($value == $search_value) {
-                return join(" --> ", $temp_path);
+        foreach($managers2 as $manager) {
+            if($manager->company == $worstPopularCompany) {
+                return $manager;
             }
         }
     }
 
-    return null;
-}
+    if(!in_array($filename, ['b', 'c'])) {
+        //Solo un Manager a sinistra
+        if ($office[$rowId][$columnId - 1] == 'M' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == '#') {
+            $managers2 = $managers;
+            $keys = array_keys($managers2);
+            array_multisort(
+                array_column($managers2, 'bonus'), SORT_ASC, SORT_NUMERIC, $managers2, $keys
+            );
+            $managers2 = array_combine($keys, $managers2);
 
-function getBestManagerHere($rowId, $columnId)
-{
-    global $managers, $office, $worstPopularCompany;
+            foreach($managers2 as $manager) {
+                if($manager->company == $worstPopularCompany) {
+                    return $manager;
+                }
+            }
+        }
+
+        //Solo un Manager a sopra
+        if ($office[$rowId][$columnId - 1] == '#' && $office[$rowId + 1][$columnId] == 'M' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == '#') {
+            $managers2 = $managers;
+            $keys = array_keys($managers2);
+            array_multisort(
+                array_column($managers2, 'bonus'), SORT_ASC, SORT_NUMERIC, $managers2, $keys
+            );
+            $managers2 = array_combine($keys, $managers2);
+
+            foreach($managers2 as $manager) {
+                if($manager->company == $worstPopularCompany) {
+                    return $manager;
+                }
+            }
+        }
+
+        //Solo un Manager a destra
+        if ($office[$rowId][$columnId - 1] == '#' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == 'M' && $office[$rowId - 1][$columnId] == '#') {
+            $managers2 = $managers;
+            $keys = array_keys($managers2);
+            array_multisort(
+                array_column($managers2, 'bonus'), SORT_ASC, SORT_NUMERIC, $managers2, $keys
+            );
+            $managers2 = array_combine($keys, $managers2);
+
+            foreach($managers2 as $manager) {
+                if($manager->company == $worstPopularCompany) {
+                    return $manager;
+                }
+            }
+        }
+
+        //Solo un manager sotto
+        if ($office[$rowId][$columnId - 1] == '#' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == 'M') {
+            $managers2 = $managers;
+            $keys = array_keys($managers2);
+            array_multisort(
+                array_column($managers2, 'bonus'), SORT_ASC, SORT_NUMERIC, $managers2, $keys
+            );
+            $managers2 = array_combine($keys, $managers2);
+
+            foreach($managers2 as $manager) {
+                if($manager->company == $worstPopularCompany) {
+                    return $manager;
+                }
+            }
+        }
+    }
+
+    // codice vecchio ->
 
     $topEmploye = $office[$rowId - 1][$columnId];
     $rightEmploye = $office[$rowId][$columnId + 1];
@@ -185,6 +313,12 @@ function getBestManagerHere($rowId, $columnId)
             // ora viene preso il primo porca troia
             $bestManager = getWorstManager();
             break;
+        }
+    }
+
+    if(!$bestManager) {
+        foreach($managers as $manager) {
+            if(empty($manager->coordinates)) return $manager;
         }
     }
 
