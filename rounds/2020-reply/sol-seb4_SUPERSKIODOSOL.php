@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 
 require_once '../../bootstrap.php';
 
-$fileName = 'd';
+$fileName = 'b';
 
 include 'reader-seb.php';
 
@@ -198,6 +198,7 @@ function getBestManagerHere($rowId, $columnId)
 
     // nuovo controllo ->
 
+    // Non capita quasi mai questa roba qui
     if($office[$rowId][$columnId - 1] == '#' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == '#') {
         // getWorstDeveloper()
 
@@ -399,23 +400,6 @@ $managers = array_combine($keys, $managers);
 $output = [];
 
 $posizionato = 0;
-
-function ciclaPiuVeloce($rowId, &$columnId)
-{
-    global $office;
-
-    if ($office[$rowId][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId][$columnId + 2] == '#' && $office[$rowId][$columnId + 3] == '#' && $office[$rowId][$columnId + 4] == '#') {
-        $columnId =+ 5;
-        return true;
-    } elseif ($office[$rowId][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId][$columnId + 2] == '#' && $office[$rowId][$columnId + 3] == '#') {
-        $columnId =+ 4;
-        return true;
-    } elseif ($office[$rowId][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId][$columnId + 2] == '#') {
-        $columnId =+ 3;
-        return true;
-    }
-    return false;
-}
 
 for ($rowId = 0; $rowId < $height; $rowId++) {
     for ($columnId = 0; $columnId < $width; $columnId++) {
