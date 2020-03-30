@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 
 require_once '../../bootstrap.php';
 
-$fileName = 'e';
+$fileName = 'd';
 
 include 'reader-seb.php';
 
@@ -332,7 +332,7 @@ function getWorstManager() {
     $managers2 = $managers;
     $keys = array_keys($managers2);
     array_multisort(
-        array_column($managers2, 'bonus'), SORT_ASC, SORT_NUMERIC, $managers2, $keys
+        array_column($managers2, 'bonus'), SORT_DESC, SORT_NUMERIC, $managers2, $keys
     );
     $managers2 = array_combine($keys, $managers2);
 
@@ -340,6 +340,11 @@ function getWorstManager() {
         if(!empty($manager->coordinates)) continue;
         if($manager->company == $worstPopularCompany)
             return $manager;
+    }
+
+    foreach($managers2 as $manager) {
+        if(!empty($manager->coordinates)) continue;
+        return $manager;
     }
 
     return array_values($managers2)[0];
