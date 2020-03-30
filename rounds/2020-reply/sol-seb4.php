@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 
 require_once '../../bootstrap.php';
 
-$fileName = 'c';
+$fileName = 'e';
 
 include 'reader-seb.php';
 
@@ -72,7 +72,7 @@ function getBestDeveloperHere($rowId, $columnId)
         }
     }
 
-    if(!in_array($filename, ['b', 'c'])) {
+    if(!in_array($filename, ['b', 'c', 'e'])) {
         //Solo un Manager a sinistra
         if ($office[$rowId][$columnId - 1] == 'M' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == '#') {
             $developers2 = $developers;
@@ -215,7 +215,7 @@ function getBestManagerHere($rowId, $columnId)
         }
     }
 
-    if(!in_array($filename, ['b', 'c'])) {
+    if(!in_array($filename, ['b', 'c', 'e'])) {
         //Solo un Manager a sinistra
         if ($office[$rowId][$columnId - 1] == 'M' && $office[$rowId + 1][$columnId] == '#' && $office[$rowId][$columnId + 1] == '#' && $office[$rowId - 1][$columnId] == '#') {
             $managers2 = $managers;
